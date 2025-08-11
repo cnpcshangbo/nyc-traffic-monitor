@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import MapView from './components/MapView';
-import VideoPlayerNative from './components/VideoPlayerNative';
+import VideoPlayerEnhanced from './components/VideoPlayerEnhanced';
 import TrafficChart from './components/TrafficChart';
 import { Detection, ObjectDetectionService } from './services/objectDetection';
 import './App.css';
@@ -15,21 +15,21 @@ interface Location {
 const locations: Location[] = [
   {
     id: '74th-amsterdam-columbus',
-    name: '74th–Amsterdam–Columbus',
+    name: '74th-Amsterdam-Columbus',
     coordinates: [40.7784, -73.9818],
-    videoPath: '../74th–Amsterdam–Columbus/2025-02-13_06-00-04.mp4'
+    videoPath: '../74th-Amsterdam-Columbus/2025-02-13_06-00-04.mp4'
   },
   {
     id: 'amsterdam-80th',
-    name: 'Amsterdam–80th',
+    name: 'Amsterdam-80th',
     coordinates: [40.7833, -73.9778],
-    videoPath: '../Amsterdam–80th/2025-02-13_06-00-04.mp4'
+    videoPath: '../Amsterdam-80th/2025-02-13_06-00-04.mp4'
   },
   {
     id: 'columbus-86th',
-    name: 'Columbus–86th',
+    name: 'Columbus-86th',
     coordinates: [40.7882, -73.9739],
-    videoPath: '../Columbus–86th/2025-02-13_06-00-06.mp4'
+    videoPath: '../Columbus-86th/2025-02-13_06-00-06.mp4'
   }
 ];
 
@@ -98,8 +98,9 @@ function App() {
             <h2>{selectedLocation.name}</h2>
             
             <div className="video-section">
-              <VideoPlayerNative
+              <VideoPlayerEnhanced
                 videoPath={selectedLocation.videoPath}
+                locationId={selectedLocation.name}
                 onTimeUpdate={handleTimeUpdate}
                 onDetections={handleDetections}
               />

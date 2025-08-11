@@ -5,4 +5,13 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   assetsInclude: ['**/*.mp4'],
+  server: {
+    host: '0.0.0.0',  // Allow external connections
+    port: 5173,
+    allowedHosts: [
+      'classification.boshang.online',
+      'localhost',
+      '127.0.0.1'
+    ]
+  }
 })

@@ -47,3 +47,4 @@ lerna-debug.log*
 # OS files
 Thumbs.db
 EOF < /dev/null
+backend/app/__pycache__/

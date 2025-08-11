@@ -1,0 +1,2 @@
+- **Fine-tuned YOLO model**: `/home/roboticslab/City College Dropbox/BO SHANG/gsv_truck/2025/ws/runs/best.pt`
+- **Labeled dataset**: `/home/roboticslab/City College Dropbox/BO SHANG/gsv_truck/2025/ws/datasets/gsv`
