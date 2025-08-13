@@ -23,4 +23,4 @@ RUN mkdir -p /app/processed_videos
 EXPOSE 8001
 
 # Run FastAPI with uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
+CMD ["uvicorn", "api_server:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]

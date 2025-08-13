@@ -5,6 +5,7 @@ import TrafficChart from './components/TrafficChart';
 import SchemaSelector from './components/SchemaSelector';
 import CustomSchemaDialog from './components/CustomSchemaDialog';
 import VideoUploader from './components/VideoUploader';
+import ProcessingProgress from './components/ProcessingProgress';
 import { Detection, ObjectDetectionService } from './services/objectDetection';
 import { ClassificationSchema, predefinedSchemas } from './config/schemas';
 import './App.css';
@@ -18,19 +19,19 @@ interface Location {
 
 const locations: Location[] = [
   {
-    id: '74th-amsterdam-columbus',
+    id: '74th-Amsterdam-Columbus',
     name: 'Richmond Hill Rd & Edinboro Rd, Staten Island',
     coordinates: [40.5761, -74.1412],
     videoPath: '../74th-Amsterdam-Columbus/2025-02-13_06-00-04.mp4'
   },
   {
-    id: 'amsterdam-80th',
+    id: 'Amsterdam-80th',
     name: 'Arthur Kill Rd & Storer Ave, Staten Island',
     coordinates: [40.5338, -74.2369],
     videoPath: '../Amsterdam-80th/2025-02-13_06-00-04.mp4'
   },
   {
-    id: 'columbus-86th',
+    id: 'Columbus-86th',
     name: 'Katonah Ave & East 241st St, Bronx',
     coordinates: [40.9030, -73.8500],
     videoPath: '../Columbus-86th/2025-02-13_06-00-06.mp4'
@@ -52,6 +53,18 @@ function App() {
     setSelectedLocation(location);
     setCurrentTime(0);
     detectionServiceRef.current.clearHistory();
+    
+    // Auto-scroll to video section after a short delay to allow state update
+    setTimeout(() => {
+      const videoSection = document.querySelector('.details-section');
+      if (videoSection) {
+        videoSection.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        });
+      }
+    }, 150); // Slightly increased delay for layout changes
   };
 
   const handleTimeUpdate = (time: number) => {
@@ -117,6 +130,14 @@ function App() {
     detectionServiceRef.current.clearHistory();
   };
 
+  const handleStartProcessing = (locationId: string) => {
+    console.log(`Starting YOLOv8 processing for location: ${locationId}`);
+    // This would trigger the backend processing
+    // For now, just log the action
+    // In a real implementation, you'd call:
+    // fetch('/api/process', { method: 'POST', body: JSON.stringify({ locationId }) })
+  };
+
   return (
     <div className="app">
       <header className="app-header">
@@ -132,6 +153,11 @@ function App() {
           />
           
           <VideoUploader onVideoUpload={handleVideoUpload} />
+          
+          <ProcessingProgress 
+            onStartProcessing={handleStartProcessing}
+            availableLocations={allLocations.map(loc => ({ id: loc.id, name: loc.name }))}
+          />
           
           <div className="map-section">
             <MapView 
@@ -157,7 +183,7 @@ function App() {
             <div className="video-section">
               <VideoPlayerEnhanced
                 videoPath={selectedLocation.videoPath}
-                locationId={selectedLocation.name}
+                locationId={selectedLocation.id}
                 onTimeUpdate={handleTimeUpdate}
                 onDetections={handleDetections}
               />

@@ -6,7 +6,7 @@ const getApiBaseUrl = (): string => {
   }
   
   if (window.location.hostname === 'asdfghjklzxcvbnm.aimobilitylab.xyz') {
-    // Use the same backend as classification.boshang.online
+    // Use the dedicated backend subdomain
     return 'http://classificationbackend.boshang.online';
   }
   

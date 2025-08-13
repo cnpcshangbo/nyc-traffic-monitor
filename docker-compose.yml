@@ -40,29 +40,29 @@ services:
       retries: 3
       start_period: 40s
 
-  # Backend FastAPI Server (commented out for now due to large dependencies)
-  # backend:
-  #   build:
-  #     context: ./backend
-  #     dockerfile: Dockerfile
-  #   container_name: umdl2-backend
-  #   restart: unless-stopped
-  #   ports:
-  #     - "8001:8001"
-  #   volumes:
-  #     - ./backend/app:/app:ro
-  #     - ./backend/processed_videos:/app/processed_videos
-  #     - ./public:/app/public:ro
-  #   environment:
-  #     - PYTHONUNBUFFERED=1
-  #   networks:
-  #     - umdl2-network
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #     start_period: 40s
+  # Backend FastAPI Server
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: umdl2-backend
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./backend:/app:ro
+      - ./backend/processed_videos:/app/processed_videos
+      - ./public:/app/public:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - umdl2-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 networks:
   umdl2-network:

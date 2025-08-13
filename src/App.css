@@ -123,14 +123,21 @@
 @media (max-width: 1200px) {
   .main-content {
     flex-direction: column;
+    gap: 1.5rem;
   }
   
   .left-panel {
     flex: none;
+    /* Arrange left panel items in a responsive grid */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    align-items: start;
   }
   
   .map-section {
     height: 300px;
+    grid-column: 1 / -1; /* Span full width */
   }
   
   .location-header {
@@ -138,11 +145,26 @@
     align-items: flex-start;
     gap: 1rem;
   }
+  
+  /* Reduce section spacing on smaller screens */
+  .details-section {
+    padding: 1.5rem;
+  }
+  
+  .video-section, .chart-section {
+    margin: 1.5rem 0;
+  }
 }
 
 @media (max-width: 768px) {
   .main-content {
     padding: 1rem;
+    gap: 1rem;
+  }
+  
+  .left-panel {
+    /* Stack items vertically on mobile */
+    grid-template-columns: 1fr;
     gap: 1rem;
   }
   
@@ -153,4 +175,37 @@
   .app-header h1 {
     font-size: 1.75rem;
   }
+  
+  /* More compact mobile layout */
+  .details-section {
+    padding: 1rem;
+  }
+  
+  .video-section, .chart-section {
+    margin: 1rem 0;
+  }
+  
+  .location-header {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+  }
+  
+  .details-section h2 {
+    font-size: 1.5rem;
+  }
+  
+  /* Ensure video section is more prominent */
+  .map-section {
+    height: 250px;
+  }
+}
+
+/* Add smooth transition for layout changes */
+.main-content, .left-panel, .details-section {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Optimize scroll target positioning */
+.details-section {
+  scroll-margin-top: 2rem; /* Adds space above when scrolled to */
 }
