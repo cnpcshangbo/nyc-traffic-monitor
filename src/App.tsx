@@ -4,6 +4,7 @@ import VideoPlayerEnhanced from './components/VideoPlayerEnhanced';
 import TrafficChart from './components/TrafficChart';
 import SchemaSelector from './components/SchemaSelector';
 import CustomSchemaDialog from './components/CustomSchemaDialog';
+import VideoUploader from './components/VideoUploader';
 import { Detection, ObjectDetectionService } from './services/objectDetection';
 import { ClassificationSchema, predefinedSchemas } from './config/schemas';
 import './App.css';
@@ -18,20 +19,20 @@ interface Location {
 const locations: Location[] = [
   {
     id: '74th-amsterdam-columbus',
-    name: '74th-Amsterdam-Columbus',
-    coordinates: [40.7784, -73.9818],
+    name: 'Richmond Hill Rd & Edinboro Rd, Staten Island',
+    coordinates: [40.5761, -74.1412],
     videoPath: '../74th-Amsterdam-Columbus/2025-02-13_06-00-04.mp4'
   },
   {
     id: 'amsterdam-80th',
-    name: 'Amsterdam-80th',
-    coordinates: [40.7833, -73.9778],
+    name: 'Arthur Kill Rd & Storer Ave, Staten Island',
+    coordinates: [40.5338, -74.2369],
     videoPath: '../Amsterdam-80th/2025-02-13_06-00-04.mp4'
   },
   {
     id: 'columbus-86th',
-    name: 'Columbus-86th',
-    coordinates: [40.7882, -73.9739],
+    name: 'Katonah Ave & East 241st St, Bronx',
+    coordinates: [40.9030, -73.8500],
     videoPath: '../Columbus-86th/2025-02-13_06-00-06.mp4'
   }
 ];
@@ -43,6 +44,8 @@ function App() {
   const [selectedSchema, setSelectedSchema] = useState<ClassificationSchema | null>(predefinedSchemas[0]);
   const [customSchemas, setCustomSchemas] = useState<ClassificationSchema[]>([]);
   const [showCustomDialog, setShowCustomDialog] = useState(false);
+  const [uploadedLocations, setUploadedLocations] = useState<Location[]>([]);
+  const [allLocations, setAllLocations] = useState<Location[]>(locations);
   const detectionServiceRef = useRef(new ObjectDetectionService());
 
   const handleLocationSelect = (location: Location) => {
@@ -87,6 +90,31 @@ function App() {
   const handleAddCustomSchema = (schema: ClassificationSchema) => {
     setCustomSchemas([...customSchemas, schema]);
     setSelectedSchema(schema);
+  };
+
+  const handleVideoUpload = (file: File, customLocation: string) => {
+    // Create a blob URL for the uploaded video
+    const videoUrl = URL.createObjectURL(file);
+    
+    // Create a new location for the uploaded video
+    const newLocation: Location = {
+      id: `uploaded-${Date.now()}`,
+      name: customLocation,
+      coordinates: [40.7831, -73.9778], // Default coordinates (can be updated later)
+      videoPath: videoUrl
+    };
+
+    // Add to uploaded locations and all locations
+    const updatedUploaded = [...uploadedLocations, newLocation];
+    const updatedAll = [...allLocations, newLocation];
+    
+    setUploadedLocations(updatedUploaded);
+    setAllLocations(updatedAll);
+    
+    // Automatically select the uploaded video
+    setSelectedLocation(newLocation);
+    setCurrentTime(0);
+    detectionServiceRef.current.clearHistory();
   };
 
   return (

@@ -1,0 +1,20 @@
+[Unit]
+Description=UMDL2 Docker Compose Application
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/home/roboticslab/City\ College\ Dropbox/BO\ SHANG/NYCDOT_classification_project/nyc-traffic-monitor
+Environment=DOCKER_HOST=unix:///var/run/docker.sock
+ExecStart=/usr/bin/docker-compose up -d frontend
+ExecStop=/usr/bin/docker-compose down
+User=roboticslab
+Group=docker
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

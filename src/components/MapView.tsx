@@ -35,6 +35,17 @@ const MapView: React.FC<MapViewProps> = ({ locations, onLocationSelect, selected
     }
   }, [selectedLocation]);
 
+  useEffect(() => {
+    if (mapRef.current && locations.length > 0 && !selectedLocation) {
+      // Calculate bounds to fit all locations
+      const bounds = L.latLngBounds(locations.map(loc => loc.coordinates));
+      mapRef.current.fitBounds(bounds, { 
+        padding: [20, 20],
+        maxZoom: 12
+      });
+    }
+  }, [locations, selectedLocation]);
+
   const selectedIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
@@ -55,10 +66,12 @@ const MapView: React.FC<MapViewProps> = ({ locations, onLocationSelect, selected
 
   return (
     <MapContainer
-      center={[40.7831, -73.9778]}
-      zoom={14}
+      center={[40.7200, -74.0000]}
+      zoom={10}
       style={{ height: '500px', width: '100%' }}
-      ref={mapRef}
+      whenReady={(map) => {
+        mapRef.current = map.target;
+      }}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
