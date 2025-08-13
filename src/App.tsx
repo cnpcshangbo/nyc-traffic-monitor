@@ -131,9 +131,11 @@ function App() {
             onAddCustomSchema={() => setShowCustomDialog(true)}
           />
           
+          <VideoUploader onVideoUpload={handleVideoUpload} />
+          
           <div className="map-section">
             <MapView 
-              locations={locations} 
+              locations={allLocations} 
               onLocationSelect={handleLocationSelect}
               selectedLocation={selectedLocation}
             />
