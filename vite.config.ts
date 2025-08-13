@@ -10,6 +10,7 @@ export default defineConfig({
     port: 5173,
     allowedHosts: [
       'classification.boshang.online',
+      'asdfghjklzxcvbnm.aimobilitylab.xyz',
       'localhost',
       '127.0.0.1'
     ]

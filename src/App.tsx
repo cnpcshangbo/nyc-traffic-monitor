@@ -2,7 +2,10 @@ import { useState, useRef } from 'react';
 import MapView from './components/MapView';
 import VideoPlayerEnhanced from './components/VideoPlayerEnhanced';
 import TrafficChart from './components/TrafficChart';
+import SchemaSelector from './components/SchemaSelector';
+import CustomSchemaDialog from './components/CustomSchemaDialog';
 import { Detection, ObjectDetectionService } from './services/objectDetection';
+import { ClassificationSchema, predefinedSchemas } from './config/schemas';
 import './App.css';
 
 interface Location {
@@ -37,6 +40,9 @@ function App() {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [currentDetections, setCurrentDetections] = useState<Detection[]>([]);
+  const [selectedSchema, setSelectedSchema] = useState<ClassificationSchema | null>(predefinedSchemas[0]);
+  const [customSchemas, setCustomSchemas] = useState<ClassificationSchema[]>([]);
+  const [showCustomDialog, setShowCustomDialog] = useState(false);
   const detectionServiceRef = useRef(new ObjectDetectionService());
 
   const handleLocationSelect = (location: Location) => {
@@ -70,7 +76,7 @@ function App() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `traffic_data_${selectedLocation?.id}_${aggregationLevel}.csv`;
+      a.download = `traffic_data_${selectedLocation?.id}_${selectedSchema?.id}_${aggregationLevel}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -78,24 +84,45 @@ function App() {
     }
   };
 
+  const handleAddCustomSchema = (schema: ClassificationSchema) => {
+    setCustomSchemas([...customSchemas, schema]);
+    setSelectedSchema(schema);
+  };
+
   return (
     <div className="app">
       <header className="app-header">
-        <h1>NYC Traffic Monitor</h1>
+        <h1>Urban Mobility Data Living Laboratory (UMDL2)</h1>
       </header>
       
       <div className="main-content">
-        <div className="map-section">
-          <MapView 
-            locations={locations} 
-            onLocationSelect={handleLocationSelect}
-            selectedLocation={selectedLocation}
+        <div className="left-panel">
+          <SchemaSelector 
+            selectedSchema={selectedSchema}
+            onSchemaSelect={setSelectedSchema}
+            onAddCustomSchema={() => setShowCustomDialog(true)}
           />
+          
+          <div className="map-section">
+            <MapView 
+              locations={locations} 
+              onLocationSelect={handleLocationSelect}
+              selectedLocation={selectedLocation}
+            />
+          </div>
         </div>
         
         {selectedLocation && (
           <div className="details-section">
-            <h2>{selectedLocation.name}</h2>
+            <div className="location-header">
+              <h2>{selectedLocation.name}</h2>
+              {selectedSchema && (
+                <div className="selected-schema-badge">
+                  <span className="schema-label">Schema:</span>
+                  <span className="schema-name">{selectedSchema.name}</span>
+                </div>
+              )}
+            </div>
             
             <div className="video-section">
               <VideoPlayerEnhanced
@@ -131,6 +158,12 @@ function App() {
           </div>
         )}
       </div>
+      
+      <CustomSchemaDialog
+        isOpen={showCustomDialog}
+        onClose={() => setShowCustomDialog(false)}
+        onSave={handleAddCustomSchema}
+      />
     </div>
   );
 }

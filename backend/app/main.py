@@ -9,7 +9,7 @@ from .video_processor import VideoProcessor
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="NYC Traffic Monitor - YOLOv8 Backend")
+app = FastAPI(title="Urban Mobility Data Living Laboratory (UMDL2) - YOLOv8 Backend")
 
 app.add_middleware(
     CORSMiddleware,
@@ -17,7 +17,9 @@ app.add_middleware(
         "http://localhost:5173", 
         "http://localhost:3000",
         "http://classification.boshang.online",
-        "https://classification.boshang.online"
+        "https://classification.boshang.online",
+        "http://asdfghjklzxcvbnm.aimobilitylab.xyz",
+        "https://asdfghjklzxcvbnm.aimobilitylab.xyz"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -119,7 +121,7 @@ async def serve_processed_video(filename: str, request: Request):
 
 @app.get("/")
 async def root():
-    return {"message": "NYC Traffic Monitor YOLOv8 Backend", "status": "running"}
+    return {"message": "Urban Mobility Data Living Laboratory (UMDL2) - YOLOv8 Backend", "status": "running"}
 
 @app.get("/health")
 async def health_check():

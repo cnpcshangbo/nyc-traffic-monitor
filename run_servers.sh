@@ -1,7 +1,7 @@
 #!/bin/bash
 
-echo "Starting NYC Traffic Monitor with YOLOv8 Backend..."
-echo "================================================"
+echo "Starting Urban Mobility Data Living Laboratory (UMDL2)..."
+echo "========================================================"
 
 echo "Starting backend server..."
 cd backend
@@ -21,14 +21,14 @@ FRONTEND_PID=$!
 echo "Frontend server starting on http://localhost:5173"
 
 echo ""
-echo "================================================"
-echo "Both servers are running!"
+echo "========================================================"
+echo "UMDL2 servers are running!"
 echo "Frontend: http://localhost:5173"
 echo "Backend API: http://localhost:8001"
 echo "Backend Docs: http://localhost:8001/docs"
 echo ""
 echo "Press Ctrl+C to stop both servers"
-echo "================================================"
+echo "========================================================"
 
 trap "kill $BACKEND_PID $FRONTEND_PID; exit" INT
 

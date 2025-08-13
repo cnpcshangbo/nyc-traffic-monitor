@@ -1,7 +1,12 @@
 // API configuration for different environments
 const getApiBaseUrl = (): string => {
-  // Check if we're running on the external domain
+  // Check if we're running on the external domains
   if (window.location.hostname === 'classification.boshang.online') {
+    return 'http://classificationbackend.boshang.online';
+  }
+  
+  if (window.location.hostname === 'asdfghjklzxcvbnm.aimobilitylab.xyz') {
+    // Use the same backend as classification.boshang.online
     return 'http://classificationbackend.boshang.online';
   }
   
