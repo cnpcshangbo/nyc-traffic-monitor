@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ feature/transportation-yolov8-model ]
+    branches: [ main, master, feature/transportation-yolov8-model ]
   workflow_dispatch:
 
 permissions:
@@ -32,6 +32,9 @@ jobs:
 
       - name: Build for production
         run: npm run build
+
+      - name: Add .nojekyll file
+        run: touch ./dist/.nojekyll
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
