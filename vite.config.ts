@@ -3,7 +3,8 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 // Determine base path based on environment variable or default to repo name
-const base = process.env.VITE_BASE_PATH || '/nyc-traffic-monitor/';
+// For fork: change to '/UMDL2/' or your repository name
+const base = process.env.VITE_BASE_PATH || '/UMDL2/';
 
 export default defineConfig({
   plugins: [react()],
