@@ -182,7 +182,7 @@ const ProcessingProgress: React.FC<ProcessingProgressProps> = ({
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         .processing-progress {
           margin: 20px 0;
           padding: 20px;

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import MapView from './components/MapView';
 import VideoPlayerEnhanced from './components/VideoPlayerEnhanced';
 import TrafficChart from './components/TrafficChart';
@@ -8,6 +8,7 @@ import VideoUploader from './components/VideoUploader';
 import ProcessingProgress from './components/ProcessingProgress';
 import { Detection, ObjectDetectionService } from './services/objectDetection';
 import { ClassificationSchema, predefinedSchemas } from './config/schemas';
+import { getApiBaseUrl } from './config/api';
 import './App.css';
 
 interface Location {
@@ -17,26 +18,12 @@ interface Location {
   videoPath: string;
 }
 
-const locations: Location[] = [
-  {
-    id: '74th-Amsterdam-Columbus',
-    name: 'Richmond Hill Rd & Edinboro Rd, Staten Island',
-    coordinates: [40.5761, -74.1412],
-    videoPath: '../74th-Amsterdam-Columbus/2025-02-13_06-00-04.mp4'
-  },
-  {
-    id: 'Amsterdam-80th',
-    name: 'Arthur Kill Rd & Storer Ave, Staten Island',
-    coordinates: [40.5338, -74.2369],
-    videoPath: '../Amsterdam-80th/2025-02-13_06-00-04.mp4'
-  },
-  {
-    id: 'Columbus-86th',
-    name: 'Katonah Ave & East 241st St, Bronx',
-    coordinates: [40.9030, -73.8500],
-    videoPath: '../Columbus-86th/2025-02-13_06-00-06.mp4'
-  }
-];
+// Default location coordinates (will be fetched from backend)
+const defaultCoordinates: { [key: string]: [number, number] } = {
+  '74th-Amsterdam-Columbus': [40.5761, -74.1412],
+  'Amsterdam-80th': [40.5338, -74.2369],
+  'Columbus-86th': [40.9030, -73.8500]
+};
 
 function App() {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
@@ -46,8 +33,39 @@ function App() {
   const [customSchemas, setCustomSchemas] = useState<ClassificationSchema[]>([]);
   const [showCustomDialog, setShowCustomDialog] = useState(false);
   const [uploadedLocations, setUploadedLocations] = useState<Location[]>([]);
-  const [allLocations, setAllLocations] = useState<Location[]>(locations);
+  const [allLocations, setAllLocations] = useState<Location[]>([]);
+  const [isLoadingLocations, setIsLoadingLocations] = useState(true);
   const detectionServiceRef = useRef(new ObjectDetectionService());
+
+  // Fetch locations from backend on component mount
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const response = await fetch(`${getApiBaseUrl()}/locations`);
+        if (response.ok) {
+          const data = await response.json();
+          const backendLocations: Location[] = data.locations.map((loc: any) => ({
+            id: loc.id,
+            name: loc.name,
+            coordinates: defaultCoordinates[loc.id] || [40.7831, -73.9778], // Default NYC coordinates
+            videoPath: loc.original_video_url ? `${getApiBaseUrl()}${loc.original_video_url}` : ''
+          }));
+          setAllLocations(backendLocations);
+        } else {
+          console.error('Failed to fetch locations from backend');
+          // Fall back to empty array if backend is not available
+          setAllLocations([]);
+        }
+      } catch (error) {
+        console.error('Error fetching locations:', error);
+        setAllLocations([]);
+      } finally {
+        setIsLoadingLocations(false);
+      }
+    };
+
+    fetchLocations();
+  }, []);
 
   const handleLocationSelect = (location: Location) => {
     setSelectedLocation(location);
@@ -160,11 +178,17 @@ function App() {
           />
           
           <div className="map-section">
-            <MapView 
-              locations={allLocations} 
-              onLocationSelect={handleLocationSelect}
-              selectedLocation={selectedLocation}
-            />
+            {isLoadingLocations ? (
+              <div style={{ padding: '20px', textAlign: 'center' }}>
+                <p>Loading locations...</p>
+              </div>
+            ) : (
+              <MapView 
+                locations={allLocations} 
+                onLocationSelect={handleLocationSelect}
+                selectedLocation={selectedLocation}
+              />
+            )}
           </div>
         </div>
         

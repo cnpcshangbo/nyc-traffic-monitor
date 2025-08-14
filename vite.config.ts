@@ -5,6 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   assetsInclude: ['**/*.mp4'],
+  base: process.env.NODE_ENV === 'production' ? '/nyc-traffic-monitor/' : '/',
   server: {
     host: '0.0.0.0',  // Allow external connections
     port: 5173,
@@ -14,5 +15,14 @@ export default defineConfig({
       'localhost',
       '127.0.0.1'
     ]
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 5173
+  },
+  build: {
+    // Optimize for production
+    minify: true,
+    sourcemap: false
   }
 })

@@ -1,13 +1,18 @@
 // API configuration for different environments
-const getApiBaseUrl = (): string => {
+export const getApiBaseUrl = (): string => {
   // Check if we're running on the external domains
   if (window.location.hostname === 'classification.boshang.online') {
-    return 'http://classificationbackend.boshang.online';
+    return 'https://classificationbackend.boshang.online';
   }
   
   if (window.location.hostname === 'asdfghjklzxcvbnm.aimobilitylab.xyz') {
-    // Use the dedicated backend subdomain
-    return 'http://classificationbackend.boshang.online';
+    // Use the dedicated backend subdomain with HTTPS
+    return 'https://classificationbackend.boshang.online';
+  }
+  
+  // GitHub Pages domain
+  if (window.location.hostname === 'cnpcshangbo.github.io') {
+    return 'https://classificationbackend.boshang.online';
   }
   
   // Default to localhost for local development

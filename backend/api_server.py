@@ -28,10 +28,12 @@ app.add_middleware(
 # Configuration
 BASE_DIR = Path(__file__).parent
 PROCESSED_VIDEOS_DIR = BASE_DIR / "processed_videos"
+VIDEOS_DIR = BASE_DIR / "videos"  # Original videos directory
 ORIGINAL_VIDEOS_DIR = BASE_DIR.parent / "public"
 
 # Ensure directories exist
 PROCESSED_VIDEOS_DIR.mkdir(exist_ok=True)
+VIDEOS_DIR.mkdir(exist_ok=True)
 
 # Location mapping for file naming consistency
 LOCATION_MAP = {
@@ -119,10 +121,12 @@ async def process_video(request: ProcessVideoRequest, background_tasks: Backgrou
             "message": "Video is already being processed"
         }
     
-    # Check if source video exists
-    source_video_path = ORIGINAL_VIDEOS_DIR / location_id / request.video_filename
+    # Check if source video exists (first try videos directory, then fallback to original structure)
+    source_video_path = VIDEOS_DIR / f"{location_id}_{request.video_filename}"
     if not source_video_path.exists():
-        raise HTTPException(status_code=404, detail=f"Source video not found: {source_video_path}")
+        source_video_path = ORIGINAL_VIDEOS_DIR / location_id / request.video_filename
+        if not source_video_path.exists():
+            raise HTTPException(status_code=404, detail=f"Source video not found: {request.video_filename}")
     
     # Mark as processing
     processing_status[location_id] = {
@@ -178,8 +182,9 @@ async def run_video_processing(location_id: str, input_video_path: str):
             "message": f"Processing failed: {str(e)}"
         }
 
-# Mount static files for processed videos
+# Mount static files for processed videos and original videos
 app.mount("/processed-videos", StaticFiles(directory=str(PROCESSED_VIDEOS_DIR)), name="processed-videos")
+app.mount("/videos", StaticFiles(directory=str(VIDEOS_DIR)), name="videos")
 
 @app.get("/processed-videos/{filename}")
 async def get_processed_video(filename: str):
@@ -187,6 +192,19 @@ async def get_processed_video(filename: str):
     file_path = PROCESSED_VIDEOS_DIR / filename
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Processed video not found")
+    
+    return FileResponse(
+        path=str(file_path),
+        media_type="video/mp4",
+        filename=filename
+    )
+
+@app.get("/videos/{filename}")
+async def get_original_video(filename: str):
+    """Serve original video files."""
+    file_path = VIDEOS_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Original video not found")
     
     return FileResponse(
         path=str(file_path),
@@ -203,10 +221,16 @@ async def get_locations():
         # Check for processed videos
         processed_files = list(PROCESSED_VIDEOS_DIR.glob(f"{location_id}_*_processed.mp4"))
         
+        # Check for original video in videos directory
+        original_video_filename = f"{location_id}_{info['video_file']}"
+        original_video_path = VIDEOS_DIR / original_video_filename
+        has_original = original_video_path.exists()
+        
         locations.append({
             "id": location_id,
             "name": info["name"],
             "original_video": info["video_file"],
+            "original_video_url": f"/videos/{original_video_filename}" if has_original else None,
             "has_processed": len(processed_files) > 0,
             "processed_files": [f.name for f in processed_files]
         })

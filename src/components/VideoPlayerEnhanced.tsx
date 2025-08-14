@@ -115,7 +115,9 @@ const VideoPlayerEnhanced: React.FC<VideoPlayerEnhancedProps> = ({
         console.log('Object detection model loaded');
       }).catch(error => {
         console.error('Failed to load detection model:', error);
-        setModelError('Failed to load AI model. Please refresh the page to try again.');
+        setModelError('AI model failed to load. Using processed video mode instead.');
+        // Auto-switch to processed video mode if model fails
+        setUseProcessedVideo(true);
       });
     }
     
@@ -414,30 +416,18 @@ const VideoPlayerEnhanced: React.FC<VideoPlayerEnhancedProps> = ({
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          background: 'rgba(220, 38, 38, 0.9)',
+          background: 'rgba(34, 197, 94, 0.9)',
           color: 'white',
           padding: '20px',
           borderRadius: '8px',
           textAlign: 'center',
           maxWidth: '300px'
         }}>
-          <div style={{ fontSize: '16px', marginBottom: '10px' }}>⚠️ Error</div>
+          <div style={{ fontSize: '16px', marginBottom: '10px' }}>ℹ️ Notice</div>
           <div>{modelError}</div>
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              marginTop: '15px',
-              padding: '8px 16px',
-              background: 'white',
-              color: '#dc2626',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: 'bold'
-            }}
-          >
-            Refresh Page
-          </button>
+          <div style={{ fontSize: '12px', marginTop: '10px', opacity: 0.9 }}>
+            Automatically switched to processed video mode for better performance.
+          </div>
         </div>
       )}
       

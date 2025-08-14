@@ -28,7 +28,7 @@ services:
       # Mount node_modules as anonymous volume to use container's dependencies
       - /app/node_modules
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - VITE_HOST=0.0.0.0
       - VITE_PORT=5173
     networks:

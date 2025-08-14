@@ -81,7 +81,7 @@ const MapView: React.FC<MapViewProps> = ({ locations, onLocationSelect, selected
         center={[40.7200, -74.0000]}
         zoom={10}
         style={{ height: '500px', width: '100%' }}
-        whenReady={(map) => {
+        whenReady={(map: any) => {
           mapRef.current = map.target;
         }}
       >

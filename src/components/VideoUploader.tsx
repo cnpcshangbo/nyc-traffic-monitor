@@ -120,7 +120,7 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({ onVideoUpload }) => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .video-uploader {
           margin: 20px 0;
           padding: 20px;

@@ -7,9 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Urban Mobility Data Living Laboratory (UMDL2) - A comprehensive traffic monitoring platform providing both real-time browser-based and server-processed AI-powered traffic analysis for NYC intersections.
 
 ### Current Deployment
-- **Frontend URL**: https://asdfghjklzxcvbnm.aimobilitylab.xyz/
-- **Backend API**: http://classificationbackend.boshang.online/
-- **Proxy Service**: FRP reverse proxy for public access
+- **Frontend URL**: http://asdfghjklzxcvbnm.aimobilitylab.xyz/ (Auto-start: Docker)
+- **Backend API**: http://classificationbackend.boshang.online/ (Auto-start: Systemd)
+- **Proxy Service**: FRP reverse proxy for public access (Auto-start: Systemd)
+- **Auto-Start**: All services configured for automatic startup on Ubuntu reboot
 
 ### Core Features
 - **Dual Processing Modes**: Toggle between server-processed (YOLOv8) and browser-based (COCO-SSD) detection
@@ -42,11 +43,17 @@ source venv/bin/activate  # Activate Python virtual environment
 python api_server.py --reload  # Run API server (port 8001)
 python process_videos.py  # Process videos with YOLOv8
 
-# Docker Operations
-docker-compose up -d      # Start all services
-docker-compose down       # Stop all services
-docker logs umdl2-frontend  # View frontend logs
-docker logs umdl2-backend   # View backend logs (when enabled)
+# Docker Operations (Frontend Only)
+docker-compose up -d frontend      # Start frontend service
+docker-compose down               # Stop all services
+docker logs umdl2-frontend        # View frontend logs
+
+# Backend Management (Systemd Service)
+sudo systemctl start umdl2-backend.service    # Start backend
+sudo systemctl stop umdl2-backend.service     # Stop backend
+sudo systemctl restart umdl2-backend.service  # Restart backend
+sudo systemctl status umdl2-backend.service   # Check status
+journalctl -u umdl2-backend.service -f        # View live logs
 ```
 
 ## Architecture Overview
@@ -120,19 +127,75 @@ docker logs umdl2-backend   # View backend logs (when enabled)
 
 ## Deployment Configuration
 
-### Docker Compose Setup
-- **Frontend Container**: Vite dev server on port 5173
-- **Backend Container**: FastAPI server on port 8001 (optional)
-- **Network**: umdl2-network bridge
-- **Volumes**: Mounted source code for hot-reload
+### Current Architecture
+**Frontend**: Docker Container (umdl2-frontend)
+- **Container**: `umdl2-frontend` running Vite dev server
+- **Port**: 5173 (mapped to host)
+- **Auto-start**: Docker restart policy (`unless-stopped`)
+- **Public Access**: via FRP proxy → http://asdfghjklzxcvbnm.aimobilitylab.xyz/
 
-### Systemd Service (Auto-restart)
+**Backend**: Python Virtual Environment + Systemd
+- **Service**: `umdl2-backend.service` (systemd)
+- **Runtime**: Python venv at `/backend/venv/bin/python`
+- **Port**: 8001 (FastAPI + Uvicorn)
+- **Auto-start**: Systemd service (enabled)
+- **Public Access**: via FRP proxy → http://classificationbackend.boshang.online/
+
+**Reverse Proxy**: FRP Client
+- **Service**: `frpc.service` (systemd)
+- **Config**: `/home/roboticslab/Downloads/frp_0.46.1_linux_amd64/frpc.ini`
+- **Auto-start**: Systemd service (enabled)
+- **Function**: Exposes local services to public domains
+
+### Auto-Start Configuration
+
+#### Services Enabled for Boot:
 ```bash
-# Service file: /etc/systemd/system/umdl2.service
-sudo systemctl enable umdl2.service  # Enable auto-start
-sudo systemctl start umdl2.service   # Start service
-sudo systemctl status umdl2.service  # Check status
+# Check auto-start status
+systemctl is-enabled docker          # enabled (Docker Engine)
+systemctl is-enabled umdl2-backend   # enabled (UMDL2 Backend API)
+systemctl is-enabled frpc            # enabled (FRP Reverse Proxy)
+
+# Docker containers with restart policies
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+# umdl2-frontend: restart=unless-stopped
 ```
+
+#### Backend Systemd Service
+```bash
+# Service file: /etc/systemd/system/umdl2-backend.service
+# Working Directory: /backend/
+# Executable: /backend/venv/bin/python api_server.py
+# User: roboticslab
+# Auto-restart: 3-second delay on failure
+
+# Service configuration details:
+[Unit]
+Description=UMDL2 Backend API Server
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=roboticslab
+Group=roboticslab
+WorkingDirectory=/home/roboticslab/City College Dropbox/BO SHANG/NYCDOT_classification_project/nyc-traffic-monitor/backend
+ExecStart="/home/roboticslab/City College Dropbox/BO SHANG/NYCDOT_classification_project/nyc-traffic-monitor/backend/venv/bin/python" api_server.py --host 0.0.0.0 --port 8001
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### Recovery After Reboot
+All services automatically start in this order:
+1. **Docker Engine** → starts `umdl2-frontend` container
+2. **FRP Client** → establishes reverse proxy tunnels  
+3. **UMDL2 Backend** → starts Python API server
+4. **Services Ready** → Frontend and Backend accessible via public URLs
 
 ### Important Configuration Notes
 
@@ -162,30 +225,146 @@ Backend allows all origins (`*`) for development. In production, specify actual 
 - No browser computation required
 - Higher accuracy for transportation objects
 
+## Service Management
+
+### Frontend Management (Docker)
+```bash
+# Container operations
+docker ps --filter "name=umdl2-frontend"                 # Check status
+docker logs umdl2-frontend --tail 20                    # View logs
+docker restart umdl2-frontend                           # Restart
+docker-compose up -d frontend                           # Start with compose
+docker-compose down                                      # Stop all services
+
+# Health checks
+curl -s http://localhost:5173/ | head -10               # Test local access
+curl -s http://asdfghjklzxcvbnm.aimobilitylab.xyz/       # Test public access
+```
+
+### Backend Management (Systemd)
+```bash
+# Service operations
+sudo systemctl status umdl2-backend.service             # Check status
+sudo systemctl start umdl2-backend.service              # Start service
+sudo systemctl stop umdl2-backend.service               # Stop service
+sudo systemctl restart umdl2-backend.service            # Restart service
+
+# Logs and monitoring
+journalctl -u umdl2-backend.service -f                  # Live logs
+journalctl -u umdl2-backend.service --since "1 hour ago" # Recent logs
+
+# Health checks
+curl -s http://localhost:8001/health                     # Test local API
+curl -s http://classificationbackend.boshang.online/health # Test public API
+```
+
+### FRP Proxy Management
+```bash
+# Service operations
+sudo systemctl status frpc.service                      # Check proxy status
+sudo systemctl restart frpc.service                     # Restart proxy
+journalctl -u frpc.service --since "10 minutes ago"     # Check proxy logs
+
+# Configuration
+sudo nano /home/roboticslab/Downloads/frp_0.46.1_linux_amd64/frpc.ini  # Edit config
+```
+
+### Full System Recovery
+```bash
+# After reboot or system issues, restart all services:
+sudo systemctl restart frpc.service                     # 1. Restart proxy
+docker-compose up -d frontend                           # 2. Start frontend
+sudo systemctl restart umdl2-backend.service            # 3. Restart backend
+
+# Verify all services
+sudo systemctl status frpc umdl2-backend docker         # Check service status
+docker ps --filter "name=umdl2"                         # Check containers
+curl -s http://asdfghjklzxcvbnm.aimobilitylab.xyz/       # Test frontend
+curl -s http://classificationbackend.boshang.online/health # Test backend
+```
+
 ## Troubleshooting
 
-### Processed Videos Not Showing
-1. Check API is accessible: `curl http://classificationbackend.boshang.online/health`
-2. Verify location IDs match (case-sensitive)
-3. Ensure backend service is running: `docker logs umdl2-backend`
-4. Check processed video files exist: `ls backend/processed_videos/`
+### Auto-Start Issues After Reboot
+1. **Check enabled services**:
+   ```bash
+   systemctl is-enabled docker frpc umdl2-backend
+   # All should show "enabled"
+   ```
+2. **Check service status**:
+   ```bash
+   systemctl status docker frpc umdl2-backend --no-pager
+   ```
+3. **Check Docker container auto-restart**:
+   ```bash
+   docker ps -a --filter "name=umdl2-frontend"
+   # Status should be "Up" with restart policy "unless-stopped"
+   ```
 
-### Frontend Not Updating
-1. Docker container may have cached code: `docker restart umdl2-frontend`
-2. Clear browser cache and hard refresh
-3. Check HMR is working: Look for `[vite] hmr update` in console
+### Backend Not Starting (Systemd)
+1. **Check service logs**:
+   ```bash
+   journalctl -u umdl2-backend.service --no-pager -l
+   ```
+2. **Common issues**:
+   - Python virtual environment path problems
+   - Working directory permissions
+   - Port 8001 already in use
+3. **Manual test**:
+   ```bash
+   cd backend && source venv/bin/activate && python api_server.py --port 8001
+   ```
 
-### API Connection Issues
-1. Verify backend is running: `systemctl status api_server` or check Docker
-2. Test API directly: `curl http://localhost:8001/health`
-3. Check CORS errors in browser console
-4. Ensure frp proxy is configured for port 8001
+### Frontend Container Issues
+1. **Check container status**:
+   ```bash
+   docker ps --filter "name=umdl2-frontend"
+   docker logs umdl2-frontend --tail 20
+   ```
+2. **Common issues**:
+   - Docker daemon not running
+   - Port 5173 conflicts
+   - Volume mounting problems
+3. **Rebuild if needed**:
+   ```bash
+   docker-compose down
+   docker-compose up -d frontend --build
+   ```
+
+### Public Access Issues
+1. **Check FRP proxy**:
+   ```bash
+   systemctl status frpc.service
+   journalctl -u frpc.service --since "5 minutes ago"
+   ```
+2. **Test local services first**:
+   ```bash
+   curl http://localhost:5173/  # Frontend should return HTML
+   curl http://localhost:8001/health  # Backend should return JSON
+   ```
+3. **Check FRP configuration**:
+   ```bash
+   grep -A 3 "classification_tmp-http\|classificationbackend-http" /home/roboticslab/Downloads/frp_0.46.1_linux_amd64/frpc.ini
+   ```
+
+### Docker Socket Issues
+1. **Set correct Docker socket**:
+   ```bash
+   export DOCKER_HOST=unix:///var/run/docker.sock
+   echo 'export DOCKER_HOST=unix:///var/run/docker.sock' >> ~/.bashrc
+   ```
+2. **Check Docker daemon**:
+   ```bash
+   sudo systemctl status docker
+   sudo usermod -aG docker roboticslab  # Add user to docker group
+   ```
 
 ### Video Playback Issues
 1. Test with direct URL: `http://localhost:5173/test-video.html`
 2. Check video codec compatibility (H.264 recommended)
 3. Verify file permissions in Docker volumes
 4. Look for CSP errors in browser console
+5. Check processed videos exist: `ls backend/processed_videos/`
 
 ## Recent Updates (August 2025)
 
@@ -205,16 +384,30 @@ Backend allows all origins (`*`) for development. In production, specify actual 
 - Fixed Docker socket configuration conflicts
 - Corrected systemd service for auto-restart
 - Updated frontend to use correct location IDs
+- **August 2025**: Resolved Docker Desktop conflicts preventing auto-start
+- **August 2025**: Configured backend as systemd service for reliable auto-start
+- **August 2025**: Fixed FRP proxy reconnection after service restarts
 
 ## Development Best Practices
 
 1. **Always check location ID consistency** between frontend and backend
 2. **Test API endpoints** before assuming frontend issues
-3. **Monitor Docker logs** for container health
+3. **Monitor service logs** for health:
+   - Frontend: `docker logs umdl2-frontend`
+   - Backend: `journalctl -u umdl2-backend.service -f`
+   - FRP: `journalctl -u frpc.service -f`
 4. **Use test scripts** (`test-processed-videos.sh`) to verify setup
 5. **Clear browser cache** when testing frontend changes
-6. **Restart containers** after configuration changes
-7. **Check backend logs** for API call patterns and errors
+6. **Restart services** after configuration changes:
+   - Frontend: `docker restart umdl2-frontend`
+   - Backend: `sudo systemctl restart umdl2-backend.service`
+   - FRP: `sudo systemctl restart frpc.service`
+7. **Verify auto-start configuration** after system changes:
+   - `systemctl is-enabled docker frpc umdl2-backend`
+   - `docker ps --filter "name=umdl2"`
+8. **Test public accessibility** after service restarts:
+   - Frontend: http://asdfghjklzxcvbnm.aimobilitylab.xyz/
+   - Backend: http://classificationbackend.boshang.online/health
 
 ## Security Considerations
 
