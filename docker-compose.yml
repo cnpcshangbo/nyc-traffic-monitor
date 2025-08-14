@@ -1,7 +1,25 @@
 version: '3.8'
 
 services:
-  # Frontend Vite Development Server
+  # Frontend Production Server (nginx)
+  frontend-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: umdl2-frontend-prod
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    networks:
+      - umdl2-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Frontend Vite Development Server (kept for local development)
   frontend:
     build:
       context: .
