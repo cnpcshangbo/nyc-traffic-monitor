@@ -10,8 +10,9 @@ export const getApiBaseUrl = (): string => {
     return 'https://classificationbackend.boshang.online';
   }
   
-  // GitHub Pages domain
-  if (window.location.hostname === 'cnpcshangbo.github.io') {
+  // GitHub Pages domains
+  if (window.location.hostname === 'cnpcshangbo.github.io' || 
+      window.location.hostname === 'ai-mobility-research-lab.github.io') {
     return 'https://classificationbackend.boshang.online';
   }
   
