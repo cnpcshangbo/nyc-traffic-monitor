@@ -212,15 +212,48 @@ class VirtualInductiveLoop:
         return counts
         
     def draw_zone(self, frame: np.ndarray, color: Tuple[int, int, int] = (0, 255, 255), 
-                  thickness: int = 2) -> np.ndarray:
-        """Draw the loop zone on the frame"""
+                  thickness: int = 3) -> np.ndarray:
+        """Draw the loop zone on the frame with enhanced visibility"""
+        
+        # Draw semi-transparent filled polygon for better visibility
+        overlay = frame.copy()
+        cv2.fillPoly(overlay, [self.zone_points], color)
+        frame = cv2.addWeighted(frame, 0.85, overlay, 0.15, 0)
+        
+        # Draw bold outline
         cv2.polylines(frame, [self.zone_points], isClosed=True, color=color, thickness=thickness)
         
-        # Add label
+        # Add label with background for better readability
         if len(self.zone_points) > 0:
             label_pos = tuple(self.zone_points[0])
-            cv2.putText(frame, self.name, label_pos, cv2.FONT_HERSHEY_SIMPLEX, 
-                       0.6, color, 2, cv2.LINE_AA)
+            
+            # Create label with direction indicator
+            direction_symbols = {
+                'entry': '→',
+                'exit': '←', 
+                'both': '↔'
+            }
+            direction_symbol = direction_symbols.get(self.direction, '')
+            label_text = f"{self.name} {direction_symbol}"
+            
+            # Get text size for background
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = 0.7
+            font_thickness = 2
+            (text_width, text_height), baseline = cv2.getTextSize(label_text, font, font_scale, font_thickness)
+            
+            # Draw background rectangle
+            bg_x1 = max(0, label_pos[0] - 5)
+            bg_y1 = max(0, label_pos[1] - text_height - 10)
+            bg_x2 = min(frame.shape[1], label_pos[0] + text_width + 5)
+            bg_y2 = min(frame.shape[0], label_pos[1] + 5)
+            
+            cv2.rectangle(frame, (bg_x1, bg_y1), (bg_x2, bg_y2), (0, 0, 0), -1)
+            cv2.rectangle(frame, (bg_x1, bg_y1), (bg_x2, bg_y2), color, 2)
+            
+            # Draw text
+            cv2.putText(frame, label_text, label_pos, font, font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)
+            
         return frame
 
 class VirtualLoopSystem:
@@ -434,9 +467,34 @@ class VirtualLoopSystem:
             return False
         
     def draw_loops(self, frame: np.ndarray) -> np.ndarray:
-        """Draw all virtual loops on the frame"""
-        for loop in self.loops.values():
-            frame = loop.draw_zone(frame)
+        """Draw all virtual loops on the frame with distinct colors"""
+        
+        # Define colors for different loop types/directions
+        loop_colors = {
+            'entry': (0, 255, 0),    # Green for entry loops
+            'exit': (0, 0, 255),     # Red for exit loops  
+            'both': (255, 0, 255),   # Magenta for bidirectional loops
+        }
+        
+        # Assign colors based on loop names for consistency
+        loop_name_colors = {
+            'Main_Road_Entry': (0, 255, 0),       # Green
+            'Main_Road_Exit': (0, 0, 255),        # Red
+            'Side_Street_Entry': (255, 255, 0),   # Cyan
+            'Arthur_Kill_Northbound': (255, 0, 255),  # Magenta
+            'Arthur_Kill_Southbound': (0, 255, 255),  # Yellow
+            'Storer_Ave_Eastbound': (255, 165, 0),    # Orange
+            'Katonah_Ave_Entry': (0, 255, 0),         # Green
+            'Katonah_Ave_Exit': (0, 0, 255),          # Red
+            'East_241st_Entry': (255, 255, 0),        # Cyan
+            'East_241st_Exit': (255, 0, 128),         # Pink
+        }
+        
+        for loop_name, loop in self.loops.items():
+            # Use specific color for the loop name, fallback to direction color
+            color = loop_name_colors.get(loop_name, loop_colors.get(loop.direction, (0, 255, 255)))
+            frame = loop.draw_zone(frame, color)
+            
         return frame
         
     def get_summary_stats(self) -> Dict[str, Any]:
