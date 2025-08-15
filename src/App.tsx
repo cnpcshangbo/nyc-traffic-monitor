@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import MapView from './components/MapView';
 import VideoPlayerEnhanced from './components/VideoPlayerEnhanced';
 import TrafficChart from './components/TrafficChart';
+import TrafficVolumeChart from './components/TrafficVolumeChart';
 import SchemaSelector from './components/SchemaSelector';
 import CustomSchemaDialog from './components/CustomSchemaDialog';
 import VideoUploader from './components/VideoUploader';
@@ -226,6 +227,12 @@ function App() {
                 currentTime={currentTime}
                 detections={currentDetections}
                 detectionService={detectionServiceRef.current}
+              />
+              
+              <TrafficVolumeChart
+                locationId={selectedLocation.id}
+                currentTime={currentTime}
+                onTimeSelect={handleTimeUpdate}
               />
             </div>
             
