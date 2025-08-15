@@ -19,3 +19,29 @@
 2025-08-15 13:18:18,749 - __main__ - INFO - Progress: 27.3% (3000/10977), ETA: 192.3s
 2025-08-15 13:18:25,738 - __main__ - INFO - Progress: 30.1% (3300/10977), ETA: 184.5s
 2025-08-15 13:18:32,534 - __main__ - INFO - Progress: 32.8% (3600/10977), ETA: 176.4s
+2025-08-15 13:18:38,858 - __main__ - INFO - Progress: 35.5% (3900/10977), ETA: 167.7s
+2025-08-15 13:18:45,103 - __main__ - INFO - Progress: 38.3% (4200/10977), ETA: 159.2s
+2025-08-15 13:18:51,930 - __main__ - INFO - Progress: 41.0% (4500/10977), ETA: 151.9s
+2025-08-15 13:18:58,949 - __main__ - INFO - Progress: 43.7% (4800/10977), ETA: 144.8s
+2025-08-15 13:19:06,566 - __main__ - INFO - Progress: 46.5% (5100/10977), ETA: 138.4s
+2025-08-15 13:19:14,095 - __main__ - INFO - Progress: 49.2% (5400/10977), ETA: 131.9s
+2025-08-15 13:19:21,415 - __main__ - INFO - Progress: 51.9% (5700/10977), ETA: 125.0s
+2025-08-15 13:19:28,312 - __main__ - INFO - Progress: 54.7% (6000/10977), ETA: 117.7s
+2025-08-15 13:19:35,507 - __main__ - INFO - Progress: 57.4% (6300/10977), ETA: 110.7s
+2025-08-15 13:19:42,881 - __main__ - INFO - Progress: 60.1% (6600/10977), ETA: 103.8s
+2025-08-15 13:19:50,263 - __main__ - INFO - Progress: 62.9% (6900/10977), ETA: 96.8s
+2025-08-15 13:19:57,654 - __main__ - INFO - Progress: 65.6% (7200/10977), ETA: 89.8s
+2025-08-15 13:20:04,826 - __main__ - INFO - Progress: 68.3% (7500/10977), ETA: 82.7s
+2025-08-15 13:20:11,630 - __main__ - INFO - Progress: 71.1% (7800/10977), ETA: 75.4s
+2025-08-15 13:20:18,639 - __main__ - INFO - Progress: 73.8% (8100/10977), ETA: 68.3s
+2025-08-15 13:20:26,116 - __main__ - INFO - Progress: 76.5% (8400/10977), ETA: 61.3s
+2025-08-15 13:20:33,744 - __main__ - INFO - Progress: 79.3% (8700/10977), ETA: 54.3s
+2025-08-15 13:20:41,374 - __main__ - INFO - Progress: 82.0% (9000/10977), ETA: 47.2s
+2025-08-15 13:20:49,126 - __main__ - INFO - Progress: 84.7% (9300/10977), ETA: 40.2s
+2025-08-15 13:20:57,678 - __main__ - INFO - Progress: 87.5% (9600/10977), ETA: 33.2s
+2025-08-15 13:21:05,317 - __main__ - INFO - Progress: 90.2% (9900/10977), ETA: 26.0s
+2025-08-15 13:21:13,106 - __main__ - INFO - Progress: 92.9% (10200/10977), ETA: 18.8s
+2025-08-15 13:21:20,885 - __main__ - INFO - Progress: 95.7% (10500/10977), ETA: 11.6s
+2025-08-15 13:21:28,437 - __main__ - INFO - Progress: 98.4% (10800/10977), ETA: 4.3s
+2025-08-15 13:21:32,831 - __main__ - ERROR - Error processing video: [Errno 18] Invalid cross-device link: '/tmp/tmp_u1lrp9w.mp4' -> 'processed_videos/74th-Amsterdam-Columbus_2025-02-13_06-00-04_processed_improved.mp4'
+2025-08-15 13:21:32,832 - __main__ - ERROR - ❌ Processing failed

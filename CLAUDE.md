@@ -433,3 +433,4 @@ See `YOLOV8_IMPLEMENTATION_PLAN.md` for detailed roadmap including:
 - Advanced analytics dashboard
 - Cloud storage integration
 - Authentication and user management
+- Always make sure the video is web-compatible.
