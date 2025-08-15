@@ -31,6 +31,11 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    with socketserver.TCPServer(("0.0.0.0", PORT), MyHTTPRequestHandler) as httpd:
+    
+    # Create server with socket reuse option
+    class ReusableTCPServer(socketserver.TCPServer):
+        allow_reuse_address = True
+    
+    with ReusableTCPServer(("0.0.0.0", PORT), MyHTTPRequestHandler) as httpd:
         print(f"Serving UMDL2 at http://0.0.0.0:{PORT}")
         httpd.serve_forever()

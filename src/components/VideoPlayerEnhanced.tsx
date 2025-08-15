@@ -39,23 +39,39 @@ const VideoPlayerEnhanced: React.FC<VideoPlayerEnhancedProps> = ({
   const checkForProcessedVideo = async () => {
     setIsCheckingProcessed(true);
     setUseProcessedVideo(true); // Default to true when checking
+    console.log(`🔍 Checking for processed video for location: ${locationId}`);
+    
     try {
-      const response = await fetch(API_ENDPOINTS.processingStatus(locationId));
+      const apiUrl = API_ENDPOINTS.processingStatus(locationId);
+      console.log(`🌐 API URL: ${apiUrl}`);
+      
+      const response = await fetch(apiUrl);
+      console.log(`📡 Response status: ${response.status}, ok: ${response.ok}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
+      console.log(`📦 API Response data:`, data);
       
       if (data.status === 'completed' && data.files.length > 0) {
-        setProcessedVideoUrl(API_ENDPOINTS.processedVideo(data.files[0]));
+        const processedUrl = API_ENDPOINTS.processedVideo(data.files[0]);
+        console.log(`✅ Found processed video: ${processedUrl}`);
+        setProcessedVideoUrl(processedUrl);
         setUseProcessedVideo(true); // Use processed video if available
       } else {
+        console.log(`❌ No processed video found. Status: ${data.status}, Files: ${data.files?.length || 0}`);
         setProcessedVideoUrl(null);
         setUseProcessedVideo(false); // Fall back to live detection if no processed video
       }
     } catch (error) {
-      console.error('Error checking for processed video:', error);
+      console.error('❌ Error checking for processed video:', error);
       setProcessedVideoUrl(null);
       setUseProcessedVideo(false); // Fall back to live detection on error
     } finally {
       setIsCheckingProcessed(false);
+      console.log(`🏁 Finished checking. ProcessedVideoUrl: ${processedVideoUrl}, UseProcessedVideo: ${useProcessedVideo}`);
     }
   };
   

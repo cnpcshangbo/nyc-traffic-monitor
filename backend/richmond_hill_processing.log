@@ -1,0 +1,21 @@
+2025-08-15 13:17:06,271 - app.video_processor - INFO - Loading YOLO model from: /home/roboticslab/City College Dropbox/BO SHANG/gsv_truck/2025/ws/runs/best.pt
+2025-08-15 13:17:06,392 - app.video_processor - INFO - Model loaded successfully
+2025-08-15 13:17:06,392 - app.video_processor - INFO - Model classes: {0: 'Ped', 1: 'Bk/Mc', 2: 'PC', 3: 'Bus', 4: 'Truck', 5: 'Unknown', 6: 'trailer'}
+2025-08-15 13:17:06,392 - __main__ - INFO - Processing Richmond Hill Road video: videos/74th-Amsterdam-Columbus_2025-02-13_06-00-04.mp4
+2025-08-15 13:17:06,428 - __main__ - INFO - Video specs: 1920x1080, 30fps, 10977 frames
+2025-08-15 13:17:06,428 - __main__ - INFO - Added exclusion zone: {'x1': 1715, 'y1': 347, 'x2': 1915, 'y2': 547}
+2025-08-15 13:17:06,428 - __main__ - INFO - Added precise traffic light exclusion zone for Richmond Hill Road at (1715,347)-(1915,547)
+[ERROR:0@9.655] global cap_ffmpeg_impl.hpp:3207 open Could not find encoder for codec_id=27, error: Encoder not found
+[ERROR:0@9.655] global cap_ffmpeg_impl.hpp:3285 open VIDEOIO/FFMPEG: Failed to initialize VideoWriter
+2025-08-15 13:17:15,107 - __main__ - INFO - Progress: 2.7% (300/10977), ETA: 308.9s
+2025-08-15 13:17:21,920 - __main__ - INFO - Progress: 5.5% (600/10977), ETA: 267.9s
+2025-08-15 13:17:28,843 - __main__ - INFO - Progress: 8.2% (900/10977), ETA: 251.0s
+2025-08-15 13:17:35,992 - __main__ - INFO - Progress: 10.9% (1200/10977), ETA: 240.9s
+2025-08-15 13:17:43,176 - __main__ - INFO - Progress: 13.7% (1500/10977), ETA: 232.2s
+2025-08-15 13:17:50,401 - __main__ - INFO - Progress: 16.4% (1800/10977), ETA: 224.2s
+2025-08-15 13:17:57,429 - __main__ - INFO - Progress: 19.1% (2100/10977), ETA: 215.6s
+2025-08-15 13:18:04,440 - __main__ - INFO - Progress: 21.9% (2400/10977), ETA: 207.3s
+2025-08-15 13:18:11,579 - __main__ - INFO - Progress: 24.6% (2700/10977), ETA: 199.7s
+2025-08-15 13:18:18,749 - __main__ - INFO - Progress: 27.3% (3000/10977), ETA: 192.3s
+2025-08-15 13:18:25,738 - __main__ - INFO - Progress: 30.1% (3300/10977), ETA: 184.5s
+2025-08-15 13:18:32,534 - __main__ - INFO - Progress: 32.8% (3600/10977), ETA: 176.4s

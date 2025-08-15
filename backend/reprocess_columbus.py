@@ -67,7 +67,7 @@ class ImprovedVideoProcessor(VideoProcessor):
                 temp_path = temp_file.name
             
             try:
-                fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                fourcc = cv2.VideoWriter_fourcc(*'avc1')  # H.264 codec for web compatibility
                 out = cv2.VideoWriter(temp_path, fourcc, fps, (width, height))
                 
                 frame_count = 0

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API Call</title>
+</head>
+<body>
+    <h1>Testing Columbus-86th API Call</h1>
+    <button onclick="testAPI()">Test API</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                resultDiv.innerHTML = 'Testing API call...';
+                
+                const response = await fetch('https://classificationbackend.boshang.online/processing-status/Columbus-86th');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <h3>API Response:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                    <p>Status: ${response.status}</p>
+                    <p>URL: ${response.url}</p>
+                `;
+                
+                console.log('API Response:', data);
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>API Error:</h3>
+                    <pre style="color: red;">${error.toString()}</pre>
+                `;
+                console.error('API Error:', error);
+            }
+        }
+        
+        // Auto-run the test
+        window.onload = () => testAPI();
+    </script>
+</body>
+</html>
