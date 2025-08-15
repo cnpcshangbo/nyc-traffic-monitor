@@ -9,6 +9,7 @@ import ProcessingProgress from './components/ProcessingProgress';
 import { Detection, ObjectDetectionService } from './services/objectDetection';
 import { ClassificationSchema, predefinedSchemas } from './config/schemas';
 import { getApiBaseUrl } from './config/api';
+import labLogo from './assets/lab_logo.png';
 import './App.css';
 
 interface Location {
@@ -159,7 +160,13 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Urban Mobility Data Living Laboratory (UMDL2)</h1>
+        <div className="header-content">
+          <img src={labLogo} alt="AI & Mobility Research Lab" className="lab-logo" />
+          <div className="header-text">
+            <h1>Urban Mobility Data Living Laboratory (UMDL2)</h1>
+            <p className="header-subtitle">AI & Mobility Research Lab</p>
+          </div>
+        </div>
       </header>
       
       <div className="main-content">
@@ -244,6 +251,30 @@ function App() {
         onClose={() => setShowCustomDialog(false)}
         onSave={handleAddCustomSchema}
       />
+      
+      <footer className="app-footer">
+        <div className="footer-content">
+          <div className="footer-left">
+            <img src={labLogo} alt="AI & Mobility Research Lab" className="footer-logo" />
+            <div className="footer-info">
+              <h3>AI & Mobility Research Lab</h3>
+              <p>Advancing transportation through intelligent systems</p>
+            </div>
+          </div>
+          <div className="footer-right">
+            <div className="footer-links">
+              <a href="https://github.com/AI-Mobility-Research-Lab/UMDL2" target="_blank" rel="noopener noreferrer">
+                GitHub
+              </a>
+              <span className="separator">•</span>
+              <a href="https://ai-mobility-research-lab.github.io/UMDL2/" target="_blank" rel="noopener noreferrer">
+                Documentation
+              </a>
+            </div>
+            <p className="footer-copyright">© 2025 AI & Mobility Research Lab. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
