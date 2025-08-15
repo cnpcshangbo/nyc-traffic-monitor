@@ -7,7 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Urban Mobility Data Living Laboratory (UMDL2) - A comprehensive traffic monitoring platform providing both real-time browser-based and server-processed AI-powered traffic analysis for NYC intersections.
 
 ### Current Deployment
-- **Frontend URL**: http://asdfghjklzxcvbnm.aimobilitylab.xyz/ (Auto-start: Docker)
+- **Frontend URL**: https://asdfghjklzxcvbnm.aimobilitylab.xyz/ (Auto-start: Systemd)
+- **GitHub Pages**: https://ai-mobility-research-lab.github.io/UMDL2/ (Auto-deploy: GitHub Actions)
 - **Backend API**: http://classificationbackend.boshang.online/ (Auto-start: Systemd)
 - **Proxy Service**: FRP reverse proxy for public access (Auto-start: Systemd)
 - **Auto-Start**: All services configured for automatic startup on Ubuntu reboot
@@ -128,11 +129,12 @@ journalctl -u umdl2-backend.service -f        # View live logs
 ## Deployment Configuration
 
 ### Current Architecture
-**Frontend**: Docker Container (umdl2-frontend)
-- **Container**: `umdl2-frontend` running Vite dev server
-- **Port**: 5173 (mapped to host)
-- **Auto-start**: Docker restart policy (`unless-stopped`)
-- **Public Access**: via FRP proxy → http://asdfghjklzxcvbnm.aimobilitylab.xyz/
+**Frontend**: Systemd Service (umdl2-frontend)
+- **Service**: `umdl2-frontend.service` serving production build
+- **Runtime**: Python HTTP server with optimized static file serving
+- **Port**: 5173
+- **Auto-start**: Systemd service (enabled)
+- **Public Access**: via FRP proxy → https://asdfghjklzxcvbnm.aimobilitylab.xyz/
 
 **Backend**: Python Virtual Environment + Systemd
 - **Service**: `umdl2-backend.service` (systemd)
@@ -227,18 +229,25 @@ Backend allows all origins (`*`) for development. In production, specify actual 
 
 ## Service Management
 
-### Frontend Management (Docker)
+### Frontend Management (Systemd)
 ```bash
-# Container operations
-docker ps --filter "name=umdl2-frontend"                 # Check status
-docker logs umdl2-frontend --tail 20                    # View logs
-docker restart umdl2-frontend                           # Restart
-docker-compose up -d frontend                           # Start with compose
-docker-compose down                                      # Stop all services
+# Service operations
+sudo systemctl status umdl2-frontend.service             # Check status
+sudo systemctl start umdl2-frontend.service              # Start service
+sudo systemctl stop umdl2-frontend.service               # Stop service
+sudo systemctl restart umdl2-frontend.service            # Restart service
+
+# Logs and monitoring
+journalctl -u umdl2-frontend.service -f                  # Live logs
+journalctl -u umdl2-frontend.service --since "1 hour ago" # Recent logs
+
+# Rebuild production build after code changes
+npm run build                                            # Rebuild static files
+sudo systemctl restart umdl2-frontend.service            # Restart to serve new build
 
 # Health checks
 curl -s http://localhost:5173/ | head -10               # Test local access
-curl -s http://asdfghjklzxcvbnm.aimobilitylab.xyz/       # Test public access
+curl -s https://asdfghjklzxcvbnm.aimobilitylab.xyz/      # Test public access
 ```
 
 ### Backend Management (Systemd)
