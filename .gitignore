@@ -48,3 +48,4 @@ lerna-debug.log*
 Thumbs.db
 EOF < /dev/null
 backend/app/__pycache__/
+backend/__pycache__/
