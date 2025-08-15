@@ -178,7 +178,7 @@ const TrafficVolumeChart: React.FC<TrafficVolumeChartProps> = ({
   return (
     <div className="traffic-chart-container">
       <div className="chart-header">
-        <h3>📊 Traffic Volume Over Time</h3>
+        <h3>🚦 Virtual Loop Traffic Volume</h3>
         <div className="chart-controls">
           <button 
             className={chartType === 'line' ? 'active' : ''}

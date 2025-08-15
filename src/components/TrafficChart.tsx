@@ -31,6 +31,16 @@ const TrafficChart: React.FC<TrafficChartProps> = ({
 }) => {
   const [data, setData] = useState<TrafficData[]>([]);
   const [updateInterval, setUpdateInterval] = useState<NodeJS.Timeout | null>(null);
+  const [isServerProcessed, setIsServerProcessed] = useState(false);
+
+  // Check if we're likely using server-processed video (no recent detections)
+  useEffect(() => {
+    if (detections.length === 0 && currentTime > 5) {
+      setIsServerProcessed(true);
+    } else if (detections.length > 0) {
+      setIsServerProcessed(false);
+    }
+  }, [detections, currentTime]);
 
   useEffect(() => {
     // Clear previous interval
@@ -106,23 +116,42 @@ const TrafficChart: React.FC<TrafficChartProps> = ({
 
   return (
     <div style={{ width: '100%', height: '500px' }}>
-      <h3>Traffic Volume Over Time</h3>
+      <h3>📡 Real-time Detection Volume</h3>
       
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        marginBottom: '20px',
-        padding: '10px',
-        backgroundColor: '#f5f5f5',
-        borderRadius: '8px'
-      }}>
-        <div>
-          <strong>Current Detections:</strong> {currentTotal}
+      {isServerProcessed ? (
+        <div style={{
+          padding: '40px',
+          textAlign: 'center',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '8px',
+          margin: '20px 0'
+        }}>
+          <h4 style={{ color: '#6c757d', marginBottom: '16px' }}>
+            🎥 Server-Processed Video Mode
+          </h4>
+          <p style={{ color: '#6c757d', lineHeight: '1.5' }}>
+            This video uses pre-processed detection data with embedded bounding boxes.<br/>
+            Real-time detection data is not available in this mode.<br/>
+            <strong>Check the "Virtual Loop Traffic Volume" chart below for traffic analysis.</strong>
+          </p>
         </div>
-        <div>
-          <strong>Total Counted:</strong> {Object.values(overallStats).reduce((a, b) => a + b, 0)}
-        </div>
-      </div>
+      ) : (
+        <>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            marginBottom: '20px',
+            padding: '10px',
+            backgroundColor: '#f5f5f5',
+            borderRadius: '8px'
+          }}>
+            <div>
+              <strong>Current Detections:</strong> {currentTotal}
+            </div>
+            <div>
+              <strong>Total Counted:</strong> {Object.values(overallStats).reduce((a, b) => a + b, 0)}
+            </div>
+          </div>
       
       <ResponsiveContainer width="100%" height="80%">
         <LineChart
@@ -201,6 +230,8 @@ const TrafficChart: React.FC<TrafficChartProps> = ({
           )}
         </LineChart>
       </ResponsiveContainer>
+        </>
+      )}
     </div>
   );
 };
