@@ -213,7 +213,7 @@ class VirtualInductiveLoop:
         
     def draw_zone(self, frame: np.ndarray, color: Tuple[int, int, int] = (0, 255, 255), 
                   thickness: int = 3) -> np.ndarray:
-        """Draw the loop zone on the frame with enhanced visibility"""
+        """Draw the loop zone on the frame with enhanced visibility and traffic counter"""
         
         # Draw semi-transparent filled polygon for better visibility
         overlay = frame.copy()
@@ -223,36 +223,73 @@ class VirtualInductiveLoop:
         # Draw bold outline
         cv2.polylines(frame, [self.zone_points], isClosed=True, color=color, thickness=thickness)
         
-        # Add label with background for better readability
+        # Add label with traffic counter for better readability
         if len(self.zone_points) > 0:
             label_pos = tuple(self.zone_points[0])
             
-            # Create label with direction indicator
-            direction_symbols = {
-                'entry': '→',
-                'exit': '←', 
-                'both': '↔'
-            }
-            direction_symbol = direction_symbols.get(self.direction, '')
-            label_text = f"{self.name} {direction_symbol}"
+            # Get current traffic count
+            total_count = self.get_total_count()
+            vehicle_counts = self.get_counts_by_class()
             
-            # Get text size for background
+            # Create simplified label with live traffic count
+            label_text = f"{self.name.replace('_', ' ')}"
+            count_text = f"Traffic Count: {total_count}"
+            
+            # Add vehicle breakdown if available
+            if vehicle_counts:
+                count_details = []
+                for vehicle_type, count in vehicle_counts.items():
+                    count_details.append(f"{vehicle_type}: {count}")
+                detail_text = " | ".join(count_details)
+            else:
+                detail_text = "No vehicles detected"
+            
+            # Configure fonts
             font = cv2.FONT_HERSHEY_SIMPLEX
-            font_scale = 0.7
+            title_font_scale = 0.8
+            count_font_scale = 0.9
+            detail_font_scale = 0.6
             font_thickness = 2
-            (text_width, text_height), baseline = cv2.getTextSize(label_text, font, font_scale, font_thickness)
             
-            # Draw background rectangle
-            bg_x1 = max(0, label_pos[0] - 5)
-            bg_y1 = max(0, label_pos[1] - text_height - 10)
-            bg_x2 = min(frame.shape[1], label_pos[0] + text_width + 5)
-            bg_y2 = min(frame.shape[0], label_pos[1] + 5)
+            # Get text dimensions
+            (title_width, title_height), _ = cv2.getTextSize(label_text, font, title_font_scale, font_thickness)
+            (count_width, count_height), _ = cv2.getTextSize(count_text, font, count_font_scale, font_thickness)
+            (detail_width, detail_height), _ = cv2.getTextSize(detail_text, font, detail_font_scale, font_thickness-1)
             
-            cv2.rectangle(frame, (bg_x1, bg_y1), (bg_x2, bg_y2), (0, 0, 0), -1)
-            cv2.rectangle(frame, (bg_x1, bg_y1), (bg_x2, bg_y2), color, 2)
+            # Calculate total label dimensions
+            max_width = max(title_width, count_width, detail_width)
+            total_height = title_height + count_height + detail_height + 30  # padding
             
-            # Draw text
-            cv2.putText(frame, label_text, label_pos, font, font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)
+            # Position the label box
+            bg_x1 = max(0, label_pos[0] - 10)
+            bg_y1 = max(0, label_pos[1] - total_height - 10)
+            bg_x2 = min(frame.shape[1], label_pos[0] + max_width + 20)
+            bg_y2 = min(frame.shape[0], label_pos[1] + 10)
+            
+            # Draw semi-transparent background for better readability
+            label_overlay = frame.copy()
+            cv2.rectangle(label_overlay, (bg_x1, bg_y1), (bg_x2, bg_y2), (0, 0, 0), -1)
+            frame = cv2.addWeighted(frame, 0.7, label_overlay, 0.3, 0)
+            
+            # Draw colored border
+            cv2.rectangle(frame, (bg_x1, bg_y1), (bg_x2, bg_y2), color, 3)
+            
+            # Draw text lines
+            text_y = label_pos[1] - 15
+            
+            # Title
+            cv2.putText(frame, label_text, (label_pos[0], text_y), 
+                       font, title_font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)
+            text_y -= title_height + 8
+            
+            # Traffic count (prominent)
+            cv2.putText(frame, count_text, (label_pos[0], text_y), 
+                       font, count_font_scale, color, font_thickness, cv2.LINE_AA)
+            text_y -= count_height + 8
+            
+            # Vehicle details
+            cv2.putText(frame, detail_text, (label_pos[0], text_y), 
+                       font, detail_font_scale, (200, 200, 200), font_thickness-1, cv2.LINE_AA)
             
         return frame
 
@@ -478,9 +515,7 @@ class VirtualLoopSystem:
         
         # Assign colors based on loop names for consistency
         loop_name_colors = {
-            'Main_Road_Entry': (0, 255, 0),       # Green
-            'Main_Road_Exit': (0, 0, 255),        # Red
-            'Side_Street_Entry': (255, 255, 0),   # Cyan
+            'Side_Street_Traffic': (255, 255, 0),     # Cyan (blue-ish) for the main traffic loop
             'Arthur_Kill_Northbound': (255, 0, 255),  # Magenta
             'Arthur_Kill_Southbound': (0, 255, 255),  # Yellow
             'Storer_Ave_Eastbound': (255, 165, 0),    # Orange

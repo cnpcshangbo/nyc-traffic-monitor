@@ -14,37 +14,15 @@ LOOP_CONFIGURATIONS: Dict[str, List[Dict]] = {
     # Richmond Hill Rd & Edinboro Rd, Staten Island
     "74th-Amsterdam-Columbus": [
         {
-            "name": "Main_Road_Entry",
-            "zone_points": [
-                (200, 400),   # Top-left
-                (500, 380),   # Top-right  
-                (520, 450),   # Bottom-right
-                (220, 470)    # Bottom-left
-            ],
-            "direction": "entry",
-            "description": "Main road vehicles entering intersection"
-        },
-        {
-            "name": "Main_Road_Exit", 
-            "zone_points": [
-                (800, 500),   # Top-left
-                (1200, 480),  # Top-right
-                (1220, 550),  # Bottom-right
-                (820, 570)    # Bottom-left
-            ],
-            "direction": "exit",
-            "description": "Main road vehicles exiting intersection"
-        },
-        {
-            "name": "Side_Street_Entry",
+            "name": "Side_Street_Traffic",
             "zone_points": [
                 (600, 200),   # Top-left
                 (700, 200),   # Top-right
                 (720, 350),   # Bottom-right
                 (620, 350)    # Bottom-left
             ],
-            "direction": "entry",
-            "description": "Side street vehicles entering intersection"
+            "direction": "both",
+            "description": "Side street traffic counting zone"
         }
     ],
     

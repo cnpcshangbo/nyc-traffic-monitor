@@ -162,10 +162,10 @@ function App() {
     <div className="app">
       <header className="app-header">
         <div className="header-content">
-          <img src={labLogo} alt="AI & Mobility Research Lab" className="lab-logo" />
+          <img src={labLogo} alt="AI & Mobility Research Lab at CUNY City College of New York" className="lab-logo" />
           <div className="header-text">
             <h1>Urban Mobility Data Living Laboratory (UMDL2)</h1>
-            <p className="header-subtitle">AI & Mobility Research Lab</p>
+            <p className="header-subtitle">AI & Mobility Research Lab at CUNY City College of New York</p>
           </div>
         </div>
       </header>
@@ -262,9 +262,9 @@ function App() {
       <footer className="app-footer">
         <div className="footer-content">
           <div className="footer-left">
-            <img src={labLogo} alt="AI & Mobility Research Lab" className="footer-logo" />
+            <img src={labLogo} alt="AI & Mobility Research Lab at CUNY City College of New York" className="footer-logo" />
             <div className="footer-info">
-              <h3>AI & Mobility Research Lab</h3>
+              <h3>AI & Mobility Research Lab at CUNY City College of New York</h3>
               <p>Advancing transportation through intelligent systems</p>
             </div>
           </div>
@@ -278,7 +278,7 @@ function App() {
                 Documentation
               </a>
             </div>
-            <p className="footer-copyright">© 2025 AI & Mobility Research Lab. All rights reserved.</p>
+            <p className="footer-copyright">© 2025 AI & Mobility Research Lab at CUNY City College of New York. All rights reserved.</p>
           </div>
         </div>
       </footer>
