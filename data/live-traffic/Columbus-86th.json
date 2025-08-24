@@ -1,0 +1,14 @@
+{
+  "start_time": "2025-08-23T22:16:39.065709",
+  "last_update": "2025-08-23T22:16:39.065725",
+  "total_vehicles": 0,
+  "vehicle_types": {},
+  "time_intervals": [],
+  "recent_detections": [],
+  "traffic_rate": {
+    "vehicles_per_minute": 0.0,
+    "current_interval": 0,
+    "peak_interval": 0
+  },
+  "status": "active"
+}
