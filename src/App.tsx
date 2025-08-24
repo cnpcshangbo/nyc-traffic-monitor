@@ -48,7 +48,7 @@ function App() {
               id: loc.id,
               name: loc.name,
               coordinates: loc.coordinates || [40.7831, -73.9778],
-              videoPath: videoPath
+              videoPath: videoPath || '' // Ensure it's always a string, never undefined
             };
           })
         );
@@ -108,7 +108,7 @@ function App() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `traffic_data_${selectedLocation?.id}_${selectedSchema?.id}_${aggregationLevel}.csv`;
+      a.download = `traffic_data_${selectedLocation?.id || 'unknown'}_${selectedSchema?.id || 'default'}_${aggregationLevel}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -189,13 +189,21 @@ function App() {
 
               <div className="details-grid">
                 <div className="video-container">
-                  <VideoPlayerEnhanced
-                    videoSrc={selectedLocation.videoPath}
-                    onTimeUpdate={handleTimeUpdate}
-                    onDetections={handleDetections}
-                    detectionEnabled={true}
-                    schema={selectedSchema}
-                  />
+                  {selectedLocation.videoPath && selectedLocation.videoPath.trim() !== '' ? (
+                    <VideoPlayerEnhanced
+                      videoPath={selectedLocation.videoPath}
+                      locationId={selectedLocation.id}
+                      onTimeUpdate={handleTimeUpdate}
+                      onDetections={handleDetections}
+                    />
+                  ) : (
+                    <div className="no-video-message">
+                      <p>🎥 Video not available</p>
+                      <p className="help-text">
+                        Videos are available when running locally or on non-GitHub Pages deployments
+                      </p>
+                    </div>
+                  )}
                   
                   {/* Processing Progress for server-processed videos */}
                   <ProcessingProgress locationId={selectedLocation.id} />
