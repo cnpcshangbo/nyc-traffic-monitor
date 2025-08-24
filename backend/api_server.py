@@ -4,6 +4,7 @@ FastAPI backend server for serving processed videos and handling processing requ
 """
 
 import os
+import json
 import asyncio
 from pathlib import Path
 from typing import Dict, List, Optional, Any
@@ -72,10 +73,27 @@ async def health_check():
 async def get_processing_status(location_id: str):
     """Get processing status for a specific location."""
     
-    # Check if processed video file exists
+    # Check if processed video file exists (including demo videos)
     processed_files = []
+    
+    # First, add demo videos for this location (prioritized)
+    demo_patterns = [
+        f"{location_id}_adjusted_loop_full_demo.mp4",
+        "live_traffic_demo.mp4",
+        "tracking_ids_demo.mp4", 
+        "adjusted_loop_full_demo.mp4"
+    ]
+    
+    for pattern in demo_patterns:
+        for file in PROCESSED_VIDEOS_DIR.glob(pattern):
+            # Only include general demos for 74th-Amsterdam-Columbus
+            if location_id == "74th-Amsterdam-Columbus" or location_id in file.name:
+                processed_files.append(f"/processed-videos/{file.name}")
+    
+    # Then add regular processed videos
     for file in PROCESSED_VIDEOS_DIR.glob(f"{location_id}_*_processed.mp4"):
-        processed_files.append(f"/processed-videos/{file.name}")
+        if file.name not in [f.split('/')[-1] for f in processed_files]:
+            processed_files.append(f"/processed-videos/{file.name}")
     
     if processed_files:
         return ProcessingStatus(
@@ -218,8 +236,33 @@ async def get_locations():
     locations = []
     
     for location_id, info in LOCATION_MAP.items():
-        # Check for processed videos
+        # Check for processed videos (including demo videos)
         processed_files = list(PROCESSED_VIDEOS_DIR.glob(f"{location_id}_*_processed.mp4"))
+        demo_files = list(PROCESSED_VIDEOS_DIR.glob(f"*demo*.mp4"))
+        
+        # Include demo videos for each location (prioritize them)
+        location_demo_patterns = {
+            "74th-Amsterdam-Columbus": ['live_traffic_demo', 'tracking_ids_demo', 'adjusted_loop_full_demo', '74th-Amsterdam-Columbus_adjusted_loop_full_demo'],
+            "Amsterdam-80th": ['Amsterdam-80th_adjusted_loop_full_demo'],
+            "Columbus-86th": ['Columbus-86th_adjusted_loop_full_demo']
+        }
+        
+        if location_id in location_demo_patterns:
+            patterns = location_demo_patterns[location_id]
+            relevant_demos = [f for f in demo_files if any(pattern in f.name for pattern in patterns)]
+            
+            # Sort demo videos by preference: location-specific demos first, then general demos
+            demo_priority = {
+                f'{location_id}_adjusted_loop_full_demo': 1,
+                'live_traffic_demo': 2, 
+                'tracking_ids_demo': 3, 
+                'adjusted_loop_full_demo': 4
+            }
+            relevant_demos.sort(key=lambda f: min(demo_priority.get(pattern, 999) 
+                                                 for pattern in demo_priority.keys() 
+                                                 if pattern in f.name))
+            # Put demo videos first in the list
+            processed_files = relevant_demos + processed_files
         
         # Check for original video in videos directory
         original_video_filename = f"{location_id}_{info['video_file']}"
@@ -236,6 +279,37 @@ async def get_locations():
         })
     
     return {"locations": locations}
+
+@app.get("/live-traffic/{location_id}")
+async def get_live_traffic_data(location_id: str):
+    """Get live traffic data for a location."""
+    live_file_path = PROCESSED_VIDEOS_DIR / f"live_traffic_{location_id}.json"
+    
+    if not live_file_path.exists():
+        raise HTTPException(status_code=404, detail="Live traffic data not found")
+    
+    try:
+        with open(live_file_path, 'r') as f:
+            data = json.load(f)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading live traffic data: {str(e)}")
+
+@app.get("/live-traffic")
+async def get_all_live_traffic_data():
+    """Get live traffic data for all available locations."""
+    live_data = {}
+    
+    for location_id in LOCATION_MAP.keys():
+        live_file_path = PROCESSED_VIDEOS_DIR / f"live_traffic_{location_id}.json"
+        if live_file_path.exists():
+            try:
+                with open(live_file_path, 'r') as f:
+                    live_data[location_id] = json.load(f)
+            except Exception as e:
+                live_data[location_id] = {"error": f"Failed to read data: {str(e)}"}
+    
+    return {"live_traffic_data": live_data}
 
 if __name__ == "__main__":
     import argparse

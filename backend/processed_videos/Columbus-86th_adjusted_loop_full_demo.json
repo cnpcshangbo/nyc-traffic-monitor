@@ -1,0 +1,33 @@
+{
+  "location_id": "Columbus-86th",
+  "processing_timestamp": "2025-08-22T16:29:52.414928",
+  "video_fps": 24,
+  "total_crossings": 0,
+  "interval_seconds": 15,
+  "virtual_loops": {
+    "Primary_Traffic_Lane": {
+      "total_count": 0,
+      "vehicle_counts": {},
+      "zone_points": [
+        [
+          580,
+          380
+        ],
+        [
+          620,
+          380
+        ],
+        [
+          620,
+          420
+        ],
+        [
+          580,
+          420
+        ]
+      ],
+      "direction": "entry"
+    }
+  },
+  "time_series": []
+}

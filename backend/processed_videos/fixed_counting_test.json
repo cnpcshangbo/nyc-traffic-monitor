@@ -1,0 +1,35 @@
+{
+  "location_id": "74th-Amsterdam-Columbus",
+  "processing_timestamp": "2025-08-15T15:51:03.081637",
+  "video_fps": 29,
+  "total_crossings": 1,
+  "interval_seconds": 15,
+  "virtual_loops": {
+    "Side_Street_Traffic": {
+      "total_count": 1,
+      "vehicle_counts": {
+        "PC": 1
+      },
+      "zone_points": [
+        [
+          600,
+          200
+        ],
+        [
+          700,
+          200
+        ],
+        [
+          720,
+          350
+        ],
+        [
+          620,
+          350
+        ]
+      ],
+      "direction": "entry"
+    }
+  },
+  "time_series": []
+}

@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass, asdict
 from collections import deque
 import logging
+from real_time_logger import RealTimeTrafficLogger
 
 logger = logging.getLogger(__name__)
 
@@ -150,6 +151,9 @@ class VirtualInductiveLoop:
         self.direction = direction
         self.crossings: List[LoopCrossing] = []
         self.previous_positions: Dict[int, Tuple[int, int]] = {}  # vehicle_id -> previous centroid
+        self.counted_vehicles: Dict[int, float] = {}  # vehicle_id -> timestamp when counted
+        self.recent_crossings: List[Tuple[Tuple[int, int], float]] = []  # (centroid, timestamp) for spatial duplicate detection
+        self.cooldown_seconds = 0.5  # Minimum time between counts for same area
         
     def is_point_in_zone(self, point: Tuple[int, int]) -> bool:
         """Check if a point is inside the loop zone using cv2.pointPolygonTest"""
@@ -161,11 +165,24 @@ class VirtualInductiveLoop:
     def check_crossing(self, vehicle_id: int, current_centroid: Tuple[int, int], 
                       vehicle_data: VehicleDetection) -> Optional[LoopCrossing]:
         """
-        Check if vehicle crossed the loop zone
+        Check if vehicle crossed the loop zone with duplicate prevention
         
         Returns LoopCrossing if a crossing occurred, None otherwise
         """
         current_in_zone = self.is_point_in_zone(current_centroid)
+        current_timestamp = vehicle_data.timestamp
+        
+        # Clean up old recent crossings (older than cooldown period)
+        self.recent_crossings = [
+            (centroid, timestamp) for centroid, timestamp in self.recent_crossings
+            if current_timestamp - timestamp < self.cooldown_seconds
+        ]
+        
+        # Clean up old counted vehicles (older than cooldown period)
+        self.counted_vehicles = {
+            vid: timestamp for vid, timestamp in self.counted_vehicles.items()
+            if current_timestamp - timestamp < self.cooldown_seconds
+        }
         
         if vehicle_id in self.previous_positions:
             previous_centroid = self.previous_positions[vehicle_id]
@@ -180,6 +197,26 @@ class VirtualInductiveLoop:
                 
             # Check if we should count this crossing based on direction setting
             if crossing_type and (self.direction == "both" or self.direction == crossing_type):
+                
+                # Duplicate prevention checks
+                
+                # 1. Check if this vehicle was already counted recently
+                if vehicle_id in self.counted_vehicles:
+                    logger.debug(f"Loop {self.name}: Vehicle {vehicle_id} already counted recently, skipping")
+                    self.previous_positions[vehicle_id] = current_centroid
+                    return None
+                
+                # 2. Check if a vehicle was counted in this spatial area recently (handles ID reassignment)
+                min_distance_threshold = 50  # pixels
+                for recent_centroid, recent_timestamp in self.recent_crossings:
+                    distance = np.linalg.norm(np.array(current_centroid) - np.array(recent_centroid))
+                    if distance < min_distance_threshold:
+                        logger.debug(f"Loop {self.name}: Vehicle detected too close to recent crossing "
+                                   f"(distance: {distance:.1f}px), skipping")
+                        self.previous_positions[vehicle_id] = current_centroid
+                        return None
+                
+                # Valid crossing - record it
                 crossing = LoopCrossing(
                     vehicle_id=vehicle_id,
                     loop_name=self.name,
@@ -190,9 +227,14 @@ class VirtualInductiveLoop:
                     direction=crossing_type,
                     centroid=current_centroid
                 )
+                
+                # Record this crossing to prevent duplicates
                 self.crossings.append(crossing)
-                logger.debug(f"Loop {self.name}: Vehicle {vehicle_id} ({vehicle_data.class_name}) "
-                           f"crossed {crossing_type} at frame {vehicle_data.frame_number}")
+                self.counted_vehicles[vehicle_id] = current_timestamp
+                self.recent_crossings.append((current_centroid, current_timestamp))
+                
+                logger.info(f"Loop {self.name}: Vehicle {vehicle_id} ({vehicle_data.class_name}) "
+                           f"crossed {crossing_type} at frame {vehicle_data.frame_number} - COUNT: {len(self.crossings)}")
                 return crossing
         
         # Update position for next frame
@@ -296,13 +338,18 @@ class VirtualInductiveLoop:
 class VirtualLoopSystem:
     """Complete virtual inductive loop system for traffic monitoring"""
     
-    def __init__(self, location_id: str):
+    def __init__(self, location_id: str, enable_real_time_logging: bool = True):
         self.location_id = location_id
         self.loops: Dict[str, VirtualInductiveLoop] = {}
-        self.tracker = VehicleTracker(max_disappeared=30, max_distance=80)
         self.all_crossings: List[LoopCrossing] = []
         self.start_time = time.time()
         self.video_fps = 30  # Default, should be set when processing video
+        
+        # Real-time logging
+        self.real_time_logger = None
+        if enable_real_time_logging:
+            log_file = f"processed_videos/live_traffic_{location_id}.json"
+            self.real_time_logger = RealTimeTrafficLogger(log_file)
         
     def add_loop(self, loop: VirtualInductiveLoop):
         """Add a virtual loop to the system"""
@@ -311,49 +358,36 @@ class VirtualLoopSystem:
         
     def process_detections(self, detections: List[VehicleDetection], frame_number: int) -> List[LoopCrossing]:
         """
-        Process vehicle detections and update loop crossings
+        Process vehicle detections with YOLO tracking IDs and update loop crossings
         
         Args:
-            detections: List of vehicle detections for current frame
+            detections: List of vehicle detections for current frame (with YOLO tracking IDs)
             frame_number: Current frame number
             
         Returns:
             List of new crossings detected in this frame
         """
-        # Extract centroids for tracking
-        centroids = [det.centroid for det in detections]
-        
-        # Update tracker
-        tracked_objects = self.tracker.update(centroids)
-        
-        # Map detections to tracked object IDs
-        detection_to_id = {}
-        if len(detections) > 0 and len(tracked_objects) > 0:
-            # Simple assignment: match detections to closest tracked objects
-            for det_idx, detection in enumerate(detections):
-                min_distance = float('inf')
-                best_obj_id = None
-                
-                for obj_id, obj_centroid in tracked_objects.items():
-                    distance = np.linalg.norm(np.array(detection.centroid) - np.array(obj_centroid))
-                    if distance < min_distance:
-                        min_distance = distance
-                        best_obj_id = obj_id
-                        
-                if best_obj_id is not None and min_distance < 80:  # Max assignment distance
-                    detection_to_id[det_idx] = best_obj_id
-        
-        # Check all loops for crossings
+        # Check all loops for crossings using YOLO tracking IDs directly
         new_crossings = []
-        for det_idx, detection in enumerate(detections):
-            if det_idx in detection_to_id:
-                vehicle_id = detection_to_id[det_idx]
-                
-                for loop in self.loops.values():
-                    crossing = loop.check_crossing(vehicle_id, detection.centroid, detection)
-                    if crossing:
-                        new_crossings.append(crossing)
-                        self.all_crossings.append(crossing)
+        for detection in detections:
+            # Use YOLO tracking ID directly (much more reliable than centroid tracking)
+            vehicle_id = detection.id
+            
+            for loop in self.loops.values():
+                crossing = loop.check_crossing(vehicle_id, detection.centroid, detection)
+                if crossing:
+                    new_crossings.append(crossing)
+                    self.all_crossings.append(crossing)
+                    
+                    # Log to real-time system
+                    if self.real_time_logger:
+                        self.real_time_logger.log_vehicle_detection(
+                            vehicle_id=crossing.vehicle_id,
+                            vehicle_class=crossing.class_name,
+                            confidence=crossing.confidence,
+                            timestamp=crossing.timestamp,
+                            frame_number=crossing.frame_number
+                        )
         
         return new_crossings
         
@@ -555,3 +589,8 @@ class VirtualLoopSystem:
             "crossings_by_loop": loop_counts,
             "processing_duration": time.time() - self.start_time
         }
+    
+    def finalize_real_time_logging(self):
+        """Finalize real-time logging when processing is complete"""
+        if self.real_time_logger:
+            self.real_time_logger.finalize()

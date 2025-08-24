@@ -157,19 +157,21 @@ class VideoProcessorWithLoops:
         """
         height, width = frame.shape[:2]
         
-        # Run YOLO detection
-        results = self.model(
+        # Run YOLO tracking (includes detection + tracking)
+        results = self.model.track(
             frame, 
             conf=conf_threshold,
             iou=0.4,  # Lower IoU for better NMS
             max_det=30,  # Limit detections
+            tracker="bytetrack.yaml",  # Use ByteTrack for robust tracking
+            persist=True,  # Persist trackers between frames
             verbose=False
         )
         
         detections = []
         detection_id = 0
         
-        # Process YOLO results
+        # Process YOLO tracking results
         for result in results:
             boxes = result.boxes
             if boxes is not None:
@@ -178,6 +180,12 @@ class VideoProcessorWithLoops:
                     bbox = box.xyxy[0].cpu().numpy().astype(int)
                     conf = float(box.conf[0])
                     cls_id = int(box.cls[0])
+                    
+                    # Get tracking ID (if available)
+                    if hasattr(box, 'id') and box.id is not None:
+                        track_id = int(box.id[0])
+                    else:
+                        track_id = detection_id  # Fallback if tracking fails
                     
                     # Get class name
                     if hasattr(self.model, 'names') and cls_id in self.model.names:
@@ -193,9 +201,9 @@ class VideoProcessorWithLoops:
                     x1, y1, x2, y2 = bbox
                     centroid = ((x1 + x2) // 2, (y1 + y2) // 2)
                     
-                    # Create detection object
+                    # Create detection object with YOLO tracking ID
                     detection = VehicleDetection(
-                        id=detection_id,
+                        id=track_id,  # Use YOLO tracking ID instead of simple counter
                         class_name=class_name,
                         confidence=conf,
                         bbox=(x1, y1, x2, y2),
@@ -232,8 +240,8 @@ class VideoProcessorWithLoops:
             # Draw bounding box
             cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
             
-            # Draw label
-            label = f"{detection.class_name}: {detection.confidence:.2f}"
+            # Draw label with tracking ID
+            label = f"ID:{detection.id} {detection.class_name}: {detection.confidence:.2f}"
             label_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)[0]
             cv2.rectangle(frame, (x1, y1 - label_size[1] - 10), 
                          (x1 + label_size[0], y1), color, -1)
@@ -346,6 +354,10 @@ class VideoProcessorWithLoops:
                 # Export traffic data to JSON
                 if self.loop_system:
                     logger.info("Exporting traffic data to JSON...")
+                    
+                    # Finalize real-time logging
+                    self.loop_system.finalize_real_time_logging()
+                    
                     json_success = self.loop_system.export_to_json(output_json_path, interval_seconds=15)
                     
                     if json_success:

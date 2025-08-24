@@ -3,6 +3,7 @@ import MapView from './components/MapView';
 import VideoPlayerEnhanced from './components/VideoPlayerEnhanced';
 import TrafficChart from './components/TrafficChart';
 import TrafficVolumeChart from './components/TrafficVolumeChart';
+import LiveTrafficChart from './components/LiveTrafficChart';
 import SchemaSelector from './components/SchemaSelector';
 import CustomSchemaDialog from './components/CustomSchemaDialog';
 import VideoUploader from './components/VideoUploader';
@@ -46,12 +47,24 @@ function App() {
         const response = await fetch(`${getApiBaseUrl()}/locations`);
         if (response.ok) {
           const data = await response.json();
-          const backendLocations: Location[] = data.locations.map((loc: any) => ({
-            id: loc.id,
-            name: loc.name,
-            coordinates: defaultCoordinates[loc.id] || [40.7831, -73.9778], // Default NYC coordinates
-            videoPath: loc.original_video_url ? `${getApiBaseUrl()}${loc.original_video_url}` : ''
-          }));
+          const backendLocations: Location[] = data.locations.map((loc: any) => {
+            // Prefer processed video if available, otherwise use original
+            let videoPath = '';
+            if (loc.has_processed && loc.processed_files && loc.processed_files.length > 0) {
+              // Use the first processed video file
+              const processedFile = loc.processed_files[0];
+              videoPath = `${getApiBaseUrl()}/processed-videos/${processedFile}`;
+            } else if (loc.original_video_url) {
+              videoPath = `${getApiBaseUrl()}${loc.original_video_url}`;
+            }
+            
+            return {
+              id: loc.id,
+              name: loc.name,
+              coordinates: defaultCoordinates[loc.id] || [40.7831, -73.9778],
+              videoPath: videoPath
+            };
+          });
           setAllLocations(backendLocations);
         } else {
           console.error('Failed to fetch locations from backend');
@@ -233,6 +246,10 @@ function App() {
                 locationId={selectedLocation.id}
                 currentTime={currentTime}
                 onTimeSelect={handleTimeUpdate}
+              />
+              
+              <LiveTrafficChart
+                locationId={selectedLocation.id}
               />
             </div>
             
