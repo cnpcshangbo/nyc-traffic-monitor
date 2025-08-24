@@ -30,6 +30,14 @@ class CDNService {
 
   async fetchLocations(): Promise<Location[]> {
     try {
+      // GitHub Pages has CORS/CSP restrictions - use hardcoded data immediately
+      const isGitHubPages = window.location.hostname.includes('github.io');
+      
+      if (isGitHubPages) {
+        console.log('GitHub Pages detected - using hardcoded location data');
+        return this.getFallbackLocations();
+      }
+      
       if (isCDNConfigured()) {
         // Try CDN first - static locations from repository
         const response = await fetch(DATA_URLS.locations);
@@ -77,8 +85,16 @@ class CDNService {
   }
 
   getVideoUrl(location: Location, useProcessed: boolean = true): string {
+    const isGitHubPages = window.location.hostname.includes('github.io');
+    
+    if (isGitHubPages) {
+      // GitHub Pages: GitHub release assets don't support CORS for browser requests
+      console.log('GitHub Pages: Videos unavailable due to CORS restrictions on GitHub release assets');
+      return ''; // No video available on GitHub Pages
+    }
+    
     if (isCDNConfigured()) {
-      // Use CDN URLs - GitHub release assets
+      // Use CDN URLs - GitHub release assets (only works for non-browser requests)
       return getVideoUrl(location.id, useProcessed);
     }
     
@@ -98,6 +114,13 @@ class CDNService {
 
   // Check if a video URL is accessible
   async checkVideoAvailability(url: string): Promise<boolean> {
+    const isGitHubPages = window.location.hostname.includes('github.io');
+    
+    if (isGitHubPages || !url) {
+      // Skip video availability check on GitHub Pages due to CORS restrictions
+      return false;
+    }
+    
     try {
       const response = await fetch(url, { method: 'HEAD' });
       return response.ok;
@@ -109,12 +132,21 @@ class CDNService {
 
   // Get the best available video for a location
   async getBestVideoUrl(location: Location): Promise<string> {
+    const isGitHubPages = window.location.hostname.includes('github.io');
+    
+    if (isGitHubPages) {
+      // On GitHub Pages, return empty string immediately (no video available)
+      return '';
+    }
+    
     // Try processed video first
     if (location.has_processed && location.processed_files?.length > 0) {
       const processedUrl = this.getVideoUrl(location, true);
-      const isAvailable = await this.checkVideoAvailability(processedUrl);
-      if (isAvailable) {
-        return processedUrl;
+      if (processedUrl) {
+        const isAvailable = await this.checkVideoAvailability(processedUrl);
+        if (isAvailable) {
+          return processedUrl;
+        }
       }
     }
 
