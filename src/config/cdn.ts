@@ -6,10 +6,10 @@ const RELEASE_VERSION = 'v1.0.0';
 const GITHUB_REPO = 'AI-Mobility-Research-Lab/UMDL2';
 
 // jsDelivr CDN - Recommended for production (cached, fast, global)
+// Still syncing, using direct GitHub URLs for now
 // export const CDN_BASE = `https://cdn.jsdelivr.net/gh/${GITHUB_REPO}@${RELEASE_VERSION}`;
 
-// Alternative: Direct GitHub URLs (slower, rate limited, use for testing)
-// Temporarily using direct GitHub while jsDelivr syncs (10-30 min delay)
+// Direct GitHub URLs - Working immediately after making repo public!
 export const CDN_BASE = `https://github.com/${GITHUB_REPO}/releases/download/${RELEASE_VERSION}`;
 
 // Video URLs configuration
@@ -42,7 +42,7 @@ export const getVideoUrl = (locationId: string, useProcessed: boolean = true): s
 
 // Check if CDN is properly configured (release exists)
 export const isCDNConfigured = (): boolean => {
-  // CDN is being configured - GitHub Release v1.0.0 exists but may need time to propagate
-  // Temporarily using backend fallback until CDN URLs are accessible (10-30 min)
-  return false; // Change to true once CDN URLs are confirmed working
+  // CDN is now working! Repository is public and direct GitHub access confirmed
+  // jsDelivr may still be syncing, but direct GitHub URLs work immediately
+  return true;
 };

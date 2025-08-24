@@ -30,11 +30,8 @@ class CDNService {
 
   async fetchLocations(): Promise<Location[]> {
     try {
-      // Check if running on GitHub Pages (HTTPS) - skip HTTP backend due to Mixed Content Policy
-      const isGitHubPages = window.location.hostname.includes('github.io');
-      
       if (isCDNConfigured()) {
-        // Try CDN first
+        // Try CDN first - static locations from repository
         const response = await fetch(DATA_URLS.locations);
         if (response.ok) {
           const data = await response.json();
@@ -42,13 +39,7 @@ class CDNService {
         }
       }
       
-      if (isGitHubPages) {
-        // GitHub Pages blocks HTTP requests - use fallback data immediately
-        console.log('GitHub Pages detected - using fallback data (Mixed Content Policy blocks HTTP API)');
-        return this.getFallbackLocations();
-      }
-      
-      // Try backend API for non-GitHub Pages sites
+      // Fallback to backend API
       const response = await fetch(`${this.apiBaseUrl}/locations`);
       if (response.ok) {
         const data = await response.json();
@@ -86,20 +77,12 @@ class CDNService {
   }
 
   getVideoUrl(location: Location, useProcessed: boolean = true): string {
-    const isGitHubPages = window.location.hostname.includes('github.io');
-    
     if (isCDNConfigured()) {
-      // Use CDN URLs
+      // Use CDN URLs - GitHub release assets
       return getVideoUrl(location.id, useProcessed);
     }
     
-    if (isGitHubPages) {
-      // GitHub Pages demo - use a placeholder message
-      console.log('GitHub Pages: Video URLs unavailable due to Mixed Content Policy (HTTPS → HTTP blocked)');
-      return ''; // Will show "No video available" message
-    }
-    
-    // Fallback to backend URLs for other sites
+    // Fallback to backend URLs
     if (useProcessed && location.has_processed && location.processed_files?.length > 0) {
       const processedFile = location.processed_files[0];
       return `${this.apiBaseUrl}/processed-videos/${processedFile}`;
