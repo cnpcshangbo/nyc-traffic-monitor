@@ -9,7 +9,8 @@ import VideoUploader from './components/VideoUploader';
 import ProcessingProgress from './components/ProcessingProgress';
 import { Detection, ObjectDetectionService } from './services/objectDetection';
 import { ClassificationSchema, predefinedSchemas } from './config/schemas';
-import { API_ENDPOINTS, getApiBaseUrl } from './config/api';
+import { API_ENDPOINTS, getApiBaseUrl, isProdDemoHost } from './config/api';
+import { getDefaultDemoLocationId } from './config/processedVideos';
 import labLogo from './assets/lab_logo.png';
 import './App.css';
 
@@ -53,6 +54,20 @@ function App() {
             videoPath: loc.original_video_url ? `${getApiBaseUrl()}${loc.original_video_url}` : ''
           }));
           setAllLocations(backendLocations);
+          // Auto-select a default demo location on production-like hosts
+          try {
+            const defaultId = getDefaultDemoLocationId();
+            if (isProdDemoHost() && defaultId) {
+              const demoLoc = backendLocations.find(l => l.id === defaultId);
+              if (demoLoc) {
+                setSelectedLocation(demoLoc);
+                setCurrentTime(0);
+                detectionServiceRef.current.clearHistory();
+              }
+            }
+          } catch {
+            // No-op: auto-select is best-effort
+          }
         } else {
           console.error('Failed to fetch locations from backend');
           // Fall back to empty array if backend is not available

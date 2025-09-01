@@ -39,3 +39,15 @@ export const API_ENDPOINTS = {
   health: `${API_BASE_URL}/health`,
   locations: `${API_BASE_URL}/locations`,
 };
+
+// Helper: identify production-like hosts where we want deterministic demo UX
+export const isProdDemoHost = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname;
+  return (
+    host === 'classification.boshang.online' ||
+    host === 'asdfghjklzxcvbnm.aimobilitylab.xyz' ||
+    host === 'cnpcshangbo.github.io' ||
+    host === 'ai-mobility-research-lab.github.io'
+  );
+};

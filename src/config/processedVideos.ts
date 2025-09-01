@@ -13,3 +13,8 @@ export const getProcessedVideoOverride = (locationId: string): string | null => 
   return typeof url === 'string' && url.trim().length > 0 ? url : null;
 };
 
+// Default demo location id for auto-selection in production-like hosts
+export const getDefaultDemoLocationId = (): string | null => {
+  const keys = Object.keys(PROCESSED_VIDEO_OVERRIDES);
+  return keys.length > 0 ? keys[0] : null;
+};
