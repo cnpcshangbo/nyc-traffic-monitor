@@ -16,12 +16,12 @@ LOOP_CONFIGURATIONS: Dict[str, List[Dict]] = {
         {
             "name": "Side_Street_Traffic",
             "zone_points": [
-                (630, 220),   # Top-left - narrower and more centered
-                (670, 220),   # Top-right - only 40px wide
-                (670, 260),   # Bottom-right - shorter 40px height
-                (630, 260)    # Bottom-left - focused detection zone
+                (600, 200),   # Top-left
+                (700, 200),   # Top-right
+                (720, 350),   # Bottom-right
+                (620, 350)    # Bottom-left
             ],
-            "direction": "entry",
+            "direction": "both",
             "description": "Side street traffic counting zone"
         }
     ],
@@ -29,30 +29,85 @@ LOOP_CONFIGURATIONS: Dict[str, List[Dict]] = {
     # Arthur Kill Rd & Storer Ave, Staten Island  
     "Amsterdam-80th": [
         {
-            "name": "Main_Traffic_Flow",
+            "name": "Arthur_Kill_Northbound",
             "zone_points": [
-                (407, 400),   # Top-left - bottom center for 854x480 video
-                (447, 400),   # Top-right - only 40px wide
-                (447, 440),   # Bottom-right - 40px height
-                (407, 440)    # Bottom-left - centered horizontally
+                (300, 600),   # Top-left
+                (600, 580),   # Top-right
+                (620, 650),   # Bottom-right
+                (320, 670)    # Bottom-left
             ],
-            "direction": "entry",
-            "description": "Main traffic flow counting zone"
+            "direction": "both",
+            "description": "Arthur Kill Road northbound traffic"
+        },
+        {
+            "name": "Arthur_Kill_Southbound", 
+            "zone_points": [
+                (700, 400),   # Top-left
+                (1000, 380),  # Top-right
+                (1020, 450),  # Bottom-right
+                (720, 470)    # Bottom-left
+            ],
+            "direction": "both",
+            "description": "Arthur Kill Road southbound traffic"
+        },
+        {
+            "name": "Storer_Ave_Eastbound",
+            "zone_points": [
+                (500, 300),   # Top-left
+                (800, 290),   # Top-right
+                (820, 360),   # Bottom-right
+                (520, 370)    # Bottom-left
+            ],
+            "direction": "both", 
+            "description": "Storer Avenue eastbound traffic"
         }
     ],
     
     # Katonah Ave & East 241st St, Bronx
     "Columbus-86th": [
         {
-            "name": "Primary_Traffic_Lane",
+            "name": "Katonah_Ave_Entry",
             "zone_points": [
-                (400, 500),   # Top-left - moved to active traffic area
-                (440, 500),   # Top-right - only 40px wide
-                (440, 540),   # Bottom-right - 40px height
-                (400, 540)    # Bottom-left - positioned for vehicle detection
+                (150, 500),   # Top-left
+                (450, 480),   # Top-right
+                (470, 550),   # Bottom-right
+                (170, 570)    # Bottom-left
             ],
             "direction": "entry",
-            "description": "Primary traffic lane counting zone"
+            "description": "Katonah Avenue vehicles entering intersection"
+        },
+        {
+            "name": "Katonah_Ave_Exit",
+            "zone_points": [
+                (900, 400),   # Top-left
+                (1300, 380),  # Top-right  
+                (1320, 450),  # Bottom-right
+                (920, 470)    # Bottom-left
+            ],
+            "direction": "exit",
+            "description": "Katonah Avenue vehicles exiting intersection"
+        },
+        {
+            "name": "East_241st_Entry",
+            "zone_points": [
+                (600, 150),   # Top-left
+                (700, 150),   # Top-right
+                (720, 300),   # Bottom-right
+                (620, 300)    # Bottom-left
+            ],
+            "direction": "entry",
+            "description": "East 241st Street vehicles entering intersection"
+        },
+        {
+            "name": "East_241st_Exit",
+            "zone_points": [
+                (550, 700),   # Top-left
+                (650, 700),   # Top-right
+                (670, 850),   # Bottom-right
+                (570, 850)    # Bottom-left
+            ],
+            "direction": "exit", 
+            "description": "East 241st Street vehicles exiting intersection"
         }
     ]
 }

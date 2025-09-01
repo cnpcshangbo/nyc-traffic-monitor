@@ -71,13 +71,6 @@ const TrafficVolumeChart: React.FC<TrafficVolumeChartProps> = ({
         return;
       }
 
-      // Check if response is actually JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        setError('No traffic volume data available. Process video with virtual loops first.');
-        return;
-      }
-
       const data: TrafficData = await response.json();
       setTrafficData(data);
       console.log('📊 Loaded traffic data:', {
@@ -89,11 +82,7 @@ const TrafficVolumeChart: React.FC<TrafficVolumeChartProps> = ({
 
     } catch (error) {
       console.error('Error loading traffic data:', error);
-      if (error instanceof Error && error.message.includes('JSON')) {
-        setError('No traffic volume data available. Process video with virtual loops first.');
-      } else {
-        setError(error instanceof Error ? error.message : 'Failed to load traffic data');
-      }
+      setError(error instanceof Error ? error.message : 'Failed to load traffic data');
     } finally {
       setLoading(false);
     }
@@ -158,8 +147,17 @@ const TrafficVolumeChart: React.FC<TrafficVolumeChartProps> = ({
   }
 
   if (error) {
-    // Don't render anything if there's an error - LiveTrafficChart will handle this instead
-    return null;
+    return (
+      <div className="traffic-chart-container">
+        <div className="error-message">
+          <h3>⚠️ Traffic Volume Data</h3>
+          <p>{error}</p>
+          <button onClick={loadTrafficData} className="retry-button">
+            Retry
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (!trafficData) {

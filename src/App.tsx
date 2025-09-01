@@ -3,57 +3,61 @@ import MapView from './components/MapView';
 import VideoPlayerEnhanced from './components/VideoPlayerEnhanced';
 import TrafficChart from './components/TrafficChart';
 import TrafficVolumeChart from './components/TrafficVolumeChart';
-import LiveTrafficChart from './components/LiveTrafficChart';
 import SchemaSelector from './components/SchemaSelector';
 import CustomSchemaDialog from './components/CustomSchemaDialog';
 import VideoUploader from './components/VideoUploader';
 import ProcessingProgress from './components/ProcessingProgress';
 import { Detection, ObjectDetectionService } from './services/objectDetection';
 import { ClassificationSchema, predefinedSchemas } from './config/schemas';
-import { cdnService, Location } from './services/cdnService';
+import { getApiBaseUrl } from './config/api';
 import labLogo from './assets/lab_logo.png';
 import './App.css';
 
-interface AppLocation {
+interface Location {
   id: string;
   name: string;
   coordinates: [number, number];
   videoPath: string;
 }
 
+// Default location coordinates (will be fetched from backend)
+const defaultCoordinates: { [key: string]: [number, number] } = {
+  '74th-Amsterdam-Columbus': [40.5761, -74.1412],
+  'Amsterdam-80th': [40.5338, -74.2369],
+  'Columbus-86th': [40.9030, -73.8500]
+};
+
 function App() {
-  const [selectedLocation, setSelectedLocation] = useState<AppLocation | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [currentDetections, setCurrentDetections] = useState<Detection[]>([]);
   const [selectedSchema, setSelectedSchema] = useState<ClassificationSchema | null>(predefinedSchemas[0]);
   const [customSchemas, setCustomSchemas] = useState<ClassificationSchema[]>([]);
   const [showCustomDialog, setShowCustomDialog] = useState(false);
-  const [uploadedLocations, setUploadedLocations] = useState<AppLocation[]>([]);
-  const [allLocations, setAllLocations] = useState<AppLocation[]>([]);
+  const [uploadedLocations, setUploadedLocations] = useState<Location[]>([]);
+  const [allLocations, setAllLocations] = useState<Location[]>([]);
   const [isLoadingLocations, setIsLoadingLocations] = useState(true);
   const detectionServiceRef = useRef(new ObjectDetectionService());
 
-  // Fetch locations from CDN on component mount
+  // Fetch locations from backend on component mount
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const locations: Location[] = await cdnService.fetchLocations();
-        
-        // Convert to app format and get video URLs
-        const appLocations: AppLocation[] = await Promise.all(
-          locations.map(async (loc) => {
-            const videoPath = await cdnService.getBestVideoUrl(loc);
-            
-            return {
-              id: loc.id,
-              name: loc.name,
-              coordinates: loc.coordinates || [40.7831, -73.9778],
-              videoPath: videoPath || '' // Ensure it's always a string, never undefined
-            };
-          })
-        );
-        
-        setAllLocations(appLocations);
+        const response = await fetch(`${getApiBaseUrl()}/locations`);
+        if (response.ok) {
+          const data = await response.json();
+          const backendLocations: Location[] = data.locations.map((loc: any) => ({
+            id: loc.id,
+            name: loc.name,
+            coordinates: defaultCoordinates[loc.id] || [40.7831, -73.9778], // Default NYC coordinates
+            videoPath: loc.original_video_url ? `${getApiBaseUrl()}${loc.original_video_url}` : ''
+          }));
+          setAllLocations(backendLocations);
+        } else {
+          console.error('Failed to fetch locations from backend');
+          // Fall back to empty array if backend is not available
+          setAllLocations([]);
+        }
       } catch (error) {
         console.error('Error fetching locations:', error);
         setAllLocations([]);
@@ -65,7 +69,7 @@ function App() {
     fetchLocations();
   }, []);
 
-  const handleLocationSelect = (location: AppLocation) => {
+  const handleLocationSelect = (location: Location) => {
     setSelectedLocation(location);
     setCurrentTime(0);
     detectionServiceRef.current.clearHistory();
@@ -80,7 +84,7 @@ function App() {
           inline: 'nearest'
         });
       }
-    }, 150);
+    }, 150); // Slightly increased delay for layout changes
   };
 
   const handleTimeUpdate = (time: number) => {
@@ -108,7 +112,7 @@ function App() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `traffic_data_${selectedLocation?.id || 'unknown'}_${selectedSchema?.id || 'default'}_${aggregationLevel}.csv`;
+      a.download = `traffic_data_${selectedLocation?.id}_${selectedSchema?.id}_${aggregationLevel}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -126,133 +130,158 @@ function App() {
     const videoUrl = URL.createObjectURL(file);
     
     // Create a new location for the uploaded video
-    const newLocation: AppLocation = {
+    const newLocation: Location = {
       id: `uploaded-${Date.now()}`,
       name: customLocation,
-      coordinates: [40.7831, -73.9778], // Default coordinates
+      coordinates: [40.7831, -73.9778], // Default coordinates (can be updated later)
       videoPath: videoUrl
     };
+
+    // Add to uploaded locations and all locations
+    const updatedUploaded = [...uploadedLocations, newLocation];
+    const updatedAll = [...allLocations, newLocation];
     
-    setUploadedLocations([...uploadedLocations, newLocation]);
+    setUploadedLocations(updatedUploaded);
+    setAllLocations(updatedAll);
+    
+    // Automatically select the uploaded video
     setSelectedLocation(newLocation);
+    setCurrentTime(0);
+    detectionServiceRef.current.clearHistory();
   };
 
-  const combinedLocations = [...allLocations, ...uploadedLocations];
+  const handleStartProcessing = (locationId: string) => {
+    console.log(`Starting YOLOv8 processing for location: ${locationId}`);
+    // This would trigger the backend processing
+    // For now, just log the action
+    // In a real implementation, you'd call:
+    // fetch('/api/process', { method: 'POST', body: JSON.stringify({ locationId }) })
+  };
 
   return (
     <div className="app">
       <header className="app-header">
         <div className="header-content">
-          <img src={labLogo} alt="Lab Logo" className="lab-logo" />
+          <img src={labLogo} alt="AI & Mobility Research Lab at CUNY City College of New York" className="lab-logo" />
           <div className="header-text">
             <h1>Urban Mobility Data Living Laboratory (UMDL2)</h1>
-            <p className="subtitle">AI & Mobility Research Lab at CUNY City College of New York</p>
+            <p className="header-subtitle">AI & Mobility Research Lab at CUNY City College of New York</p>
           </div>
         </div>
       </header>
-
-      <main className="app-main">
-        {/* Map Section */}
-        <section className="map-section">
-          <div className="section-content">
-            <MapView 
-              locations={combinedLocations}
-              selectedLocation={selectedLocation}
-              onLocationSelect={handleLocationSelect}
-              isLoading={isLoadingLocations}
-            />
+      
+      <div className="main-content">
+        <div className="left-panel">
+          <SchemaSelector 
+            selectedSchema={selectedSchema}
+            onSchemaSelect={setSelectedSchema}
+            onAddCustomSchema={() => setShowCustomDialog(true)}
+          />
+          
+          <VideoUploader onVideoUpload={handleVideoUpload} />
+          
+          <ProcessingProgress 
+            onStartProcessing={handleStartProcessing}
+            availableLocations={allLocations.map(loc => ({ id: loc.id, name: loc.name }))}
+          />
+          
+          <div className="map-section">
+            {isLoadingLocations ? (
+              <div style={{ padding: '20px', textAlign: 'center' }}>
+                <p>Loading locations...</p>
+              </div>
+            ) : (
+              <MapView 
+                locations={allLocations} 
+                onLocationSelect={handleLocationSelect}
+                selectedLocation={selectedLocation}
+              />
+            )}
           </div>
-        </section>
-
-        {/* Video Upload Section */}
-        <section className="upload-section">
-          <div className="section-content">
-            <VideoUploader onVideoUpload={handleVideoUpload} />
-          </div>
-        </section>
-
-        {/* Video and Analysis Section */}
+        </div>
+        
         {selectedLocation && (
-          <section className="details-section">
-            <div className="section-content">
+          <div className="details-section">
+            <div className="location-header">
               <h2>{selectedLocation.name}</h2>
-              
-              {/* Schema Selector */}
-              <div className="controls-section">
-                <SchemaSelector
-                  schemas={[...predefinedSchemas, ...customSchemas]}
-                  selectedSchema={selectedSchema}
-                  onSchemaChange={setSelectedSchema}
-                  onCustomSchemaClick={() => setShowCustomDialog(true)}
-                />
-              </div>
-
-              <div className="details-grid">
-                <div className="video-container">
-                  {selectedLocation.videoPath && selectedLocation.videoPath.trim() !== '' ? (
-                    <VideoPlayerEnhanced
-                      videoPath={selectedLocation.videoPath}
-                      locationId={selectedLocation.id}
-                      onTimeUpdate={handleTimeUpdate}
-                      onDetections={handleDetections}
-                    />
-                  ) : (
-                    <div className="no-video-message">
-                      <p>🎥 Video not available</p>
-                      <p className="help-text">
-                        Videos are available when running locally or on non-GitHub Pages deployments
-                      </p>
-                    </div>
-                  )}
-                  
-                  {/* Processing Progress for server-processed videos */}
-                  <ProcessingProgress locationId={selectedLocation.id} />
+              {selectedSchema && (
+                <div className="selected-schema-badge">
+                  <span className="schema-label">Schema:</span>
+                  <span className="schema-name">{selectedSchema.name}</span>
                 </div>
-
-                <div className="charts-container">
-                  {/* Current detections and export controls */}
-                  <div className="detection-summary">
-                    <h3>Current Detections: {currentDetections.length}</h3>
-                    <div className="export-controls">
-                      <label>Export Level:</label>
-                      {['15s', '30s', '5min', '15min'].map(level => (
-                        <button
-                          key={level}
-                          className="export-btn"
-                          onClick={() => handleExportCSV(level)}
-                        >
-                          {level}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Real-time traffic chart */}
-                  <TrafficChart
-                    detections={currentDetections}
-                    currentTime={currentTime}
-                    schema={selectedSchema}
-                  />
-
-                  {/* Volume chart for processed videos */}
-                  <TrafficVolumeChart locationId={selectedLocation.id} />
-
-                  {/* Live traffic distribution chart */}
-                  <LiveTrafficChart locationId={selectedLocation.id} />
-                </div>
-              </div>
+              )}
             </div>
-          </section>
+            
+            <div className="video-section">
+              <VideoPlayerEnhanced
+                videoPath={selectedLocation.videoPath}
+                locationId={selectedLocation.id}
+                onTimeUpdate={handleTimeUpdate}
+                onDetections={handleDetections}
+              />
+            </div>
+            
+            <div className="chart-section">
+              <TrafficChart
+                locationId={selectedLocation.id}
+                currentTime={currentTime}
+                detections={currentDetections}
+                detectionService={detectionServiceRef.current}
+              />
+              
+              <TrafficVolumeChart
+                locationId={selectedLocation.id}
+                currentTime={currentTime}
+                onTimeSelect={handleTimeUpdate}
+              />
+            </div>
+            
+            <div className="export-section">
+              <h3>Export Data</h3>
+              <select 
+                onChange={(e) => handleExportCSV(e.target.value)}
+                defaultValue=""
+              >
+                <option value="" disabled>Select aggregation level</option>
+                <option value="15s">15 seconds</option>
+                <option value="30s">30 seconds</option>
+                <option value="5min">5 minutes</option>
+                <option value="15min">15 minutes</option>
+              </select>
+            </div>
+          </div>
         )}
-      </main>
-
-      {/* Custom Schema Dialog */}
-      {showCustomDialog && (
-        <CustomSchemaDialog
-          onSave={handleAddCustomSchema}
-          onCancel={() => setShowCustomDialog(false)}
-        />
-      )}
+      </div>
+      
+      <CustomSchemaDialog
+        isOpen={showCustomDialog}
+        onClose={() => setShowCustomDialog(false)}
+        onSave={handleAddCustomSchema}
+      />
+      
+      <footer className="app-footer">
+        <div className="footer-content">
+          <div className="footer-left">
+            <img src={labLogo} alt="AI & Mobility Research Lab at CUNY City College of New York" className="footer-logo" />
+            <div className="footer-info">
+              <h3>AI & Mobility Research Lab at CUNY City College of New York</h3>
+              <p>Advancing transportation through intelligent systems</p>
+            </div>
+          </div>
+          <div className="footer-right">
+            <div className="footer-links">
+              <a href="https://github.com/AI-Mobility-Research-Lab/UMDL2" target="_blank" rel="noopener noreferrer">
+                GitHub
+              </a>
+              <span className="separator">•</span>
+              <a href="https://ai-mobility-research-lab.github.io/UMDL2/" target="_blank" rel="noopener noreferrer">
+                Documentation
+              </a>
+            </div>
+            <p className="footer-copyright">© 2025 AI & Mobility Research Lab at CUNY City College of New York. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
