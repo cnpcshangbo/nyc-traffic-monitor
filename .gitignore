@@ -44,6 +44,10 @@ lerna-debug.log*
 *.mov
 *.mkv
 
+# Backend local env and outputs
+backend/.env
+backend/processed_videos/
+
 # OS files
 Thumbs.db
 EOF < /dev/null

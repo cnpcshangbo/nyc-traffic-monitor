@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 // Determine base path based on environment variable or deployment target
 // - For GitHub Pages: '/UMDL2/' or '/nyc-traffic-monitor/'
-// - For FRP/Docker: '/' (root path)
+// - For FRP/Docker: '/'
 const base = process.env.VITE_BASE_PATH || '/';
 
 export default defineConfig({
@@ -29,5 +29,10 @@ export default defineConfig({
     // Optimize for production
     minify: true,
     sourcemap: false
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/setupTests.ts', // For @testing-library/jest-dom
+    globals: true,
   }
 })

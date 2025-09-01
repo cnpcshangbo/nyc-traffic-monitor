@@ -46,7 +46,7 @@ cd backend
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-python api_server.py --reload
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 # API available at http://localhost:8001
 ```
 
@@ -79,7 +79,7 @@ sudo systemctl start umdl2.service
 ```bash
 cd backend
 source venv/bin/activate
-python api_server.py --host 0.0.0.0 --port 8001
+uvicorn app.main:app --host 0.0.0.0 --port 8001
 ```
 
 2. **Process videos with YOLOv8**
@@ -116,8 +116,23 @@ User Selection → Video Player → Detection Engine → Analytics → Export
 | `/health` | GET | Health check |
 | `/processing-status/{location_id}` | GET | Check for processed videos |
 | `/process-video` | POST | Trigger YOLOv8 processing |
-| `/processed-videos/{filename}` | GET | Serve processed video |
-| `/locations` | GET | List all locations |
+| `/processed/{filename}` | GET/HEAD/OPTIONS | Serve processed video with range support |
+| `/videos/{filename}` | GET/HEAD/OPTIONS | Serve original video with range support |
+| `/list-processed-videos` | GET | List all processed videos |
+
+### Legacy Backend (api_server.py)
+Some frontend views (e.g., fetching `/locations`) were designed against the legacy backend entrypoint `backend/api_server.py`. If you run that server instead of `app.main`, these routes are available:
+
+- `GET /locations` — Lists locations with original/processed availability
+- `GET /processed-videos/{filename}` — Serves processed videos (no range support)
+- `GET /videos/{filename}` — Serves original videos
+
+Run legacy server:
+```bash
+cd backend
+python api_server.py --host 0.0.0.0 --port 8001 --reload
+```
+If using `app.main`, implement an equivalent `/locations` route or adjust the frontend to not require it.
 
 ## Configuration
 
@@ -127,9 +142,19 @@ User Selection → Video Player → Detection Engine → Analytics → Export
 VITE_API_URL=http://localhost:8001  # API backend URL
 
 # Backend
+MODEL_PATH=/path/to/yolov8/best.pt   # YOLOv8 weights (overrides default)
 PROCESSED_VIDEOS_DIR=/app/processed_videos
 ORIGINAL_VIDEOS_DIR=/app/public
 ```
+
+Defaults (if unset):
+- `MODEL_PATH`: `/home/roboticslab/City College Dropbox/BO SHANG/gsv_truck/2025/ws/runs/best.pt`
+- `PROCESSED_VIDEOS_DIR`: `backend/processed_videos`
+- `ORIGINAL_VIDEOS_DIR`: `backend/../public`
+
+Examples:
+- Frontend: create `.env.local` → `VITE_API_URL=http://localhost:8001`
+- Backend: `MODEL_PATH=/models/best.pt PROCESSED_VIDEOS_DIR=/data/processed ORIGINAL_VIDEOS_DIR=/data/public uvicorn app.main:app --host 0.0.0.0 --port 8001`
 
 ### Location Configuration
 Locations are defined in `src/App.tsx`:
@@ -179,7 +204,7 @@ npm run lint
 **API connection errors?**
 - Verify backend is running
 - Check CORS configuration
-- Ensure correct API URL in `src/config/api.ts`
+- Ensure correct API URL via `VITE_API_URL` (see `.env.local`)
 
 ## Development
 

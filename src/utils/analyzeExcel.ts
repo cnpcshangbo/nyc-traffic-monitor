@@ -18,7 +18,7 @@ export function analyzeExcelStructure() {
       console.log('-------------------');
       
       const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as unknown[][];
       
       if (jsonData.length > 0) {
         console.log('Number of rows:', jsonData.length);

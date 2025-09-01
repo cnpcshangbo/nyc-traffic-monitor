@@ -272,7 +272,7 @@ const VideoPlayerEnhanced: React.FC<VideoPlayerEnhancedProps> = ({
     setIsDetecting(false);
   };
   
-  const handleError = (event: any) => {
+  const handleError = (event: Event) => {
     console.error('Video error:', event);
     console.error('Current video URL:', currentVideoUrl);
     console.error('Use processed video:', useProcessedVideo);

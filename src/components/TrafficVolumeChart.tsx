@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { API_BASE_URL } from '../config/api';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, ResponsiveContainer } from 'recharts';
 
 interface TrafficData {
@@ -47,11 +48,7 @@ const TrafficVolumeChart: React.FC<TrafficVolumeChartProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [chartType, setChartType] = useState<'line' | 'bar'>('line');
 
-  useEffect(() => {
-    loadTrafficData();
-  }, [locationId]);
-
-  const loadTrafficData = async () => {
+  const loadTrafficData = React.useCallback(async () => {
     if (!locationId) return;
 
     setLoading(true);
@@ -60,7 +57,11 @@ const TrafficVolumeChart: React.FC<TrafficVolumeChartProps> = ({
     try {
       // Try to load traffic data JSON file for this location
       const jsonFileName = `${locationId}_traffic_data.json`;
-      const response = await fetch(`/processed_videos/${jsonFileName}`);
+      let response = await fetch(`${API_BASE_URL}/processed/${encodeURIComponent(jsonFileName)}`);
+      // Fallback to legacy path if 404
+      if (response.status === 404) {
+        response = await fetch(`${API_BASE_URL}/processed-videos/${encodeURIComponent(jsonFileName)}`);
+      }
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -86,7 +87,11 @@ const TrafficVolumeChart: React.FC<TrafficVolumeChartProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [locationId]);
+
+  useEffect(() => {
+    loadTrafficData();
+  }, [loadTrafficData]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -97,7 +102,7 @@ const TrafficVolumeChart: React.FC<TrafficVolumeChartProps> = ({
   const getChartData = () => {
     if (!trafficData) return [];
 
-    return trafficData.time_series.map((interval, index) => ({
+    return trafficData.time_series.map((interval) => ({
       time: formatTime(interval.timestamp),
       timestamp: interval.timestamp,
       totalCount: interval.total_count,
@@ -120,7 +125,7 @@ const TrafficVolumeChart: React.FC<TrafficVolumeChartProps> = ({
   const getSummaryStats = () => {
     if (!trafficData) return null;
 
-    const totalByType = Object.entries(trafficData.virtual_loops).reduce((acc, [loopName, loop]) => {
+    const totalByType = Object.entries(trafficData.virtual_loops).reduce((acc, [, loop]) => {
       Object.entries(loop.vehicle_counts).forEach(([vehicleType, count]) => {
         acc[vehicleType] = (acc[vehicleType] || 0) + count;
       });
