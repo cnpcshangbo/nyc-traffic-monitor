@@ -1,0 +1,19 @@
+[Unit]
+Description=UMDL2 Frontend Static Server (serve.py)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/roboticslab/City College Dropbox/BO SHANG/NYCDOT_classification_project/nyc-traffic-monitor
+Environment=PORT=5173
+Environment=SERVE_DIR=dist
+ExecStart=/usr/bin/python3 /home/roboticslab/City College Dropbox/BO SHANG/NYCDOT_classification_project/nyc-traffic-monitor/serve.py --port 5173 --dir dist
+Restart=on-failure
+RestartSec=5s
+User=roboticslab
+Group=roboticslab
+
+[Install]
+WantedBy=multi-user.target
+
