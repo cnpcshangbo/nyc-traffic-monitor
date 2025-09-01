@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UMDL2 - Test Processed Videos</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .video-container { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        video { width: 100%; max-width: 600px; }
+        .status { margin: 10px 0; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>UMDL2 - Processed Videos Test</h1>
+    
+    <div class="video-container">
+        <h2>74th-Amsterdam-Columbus (Web-Compatible)</h2>
+        <div id="status1" class="status">Loading...</div>
+        <video id="video1" controls preload="metadata">
+            <source src="http://localhost:8001/processed/74th-Amsterdam-Columbus_web_compatible.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    
+    <div class="video-container">
+        <h2>Amsterdam-80th (Web-Compatible)</h2>
+        <div id="status2" class="status">Loading...</div>
+        <video id="video2" controls preload="metadata">
+            <source src="http://localhost:8001/processed/Amsterdam-80th_web_compatible.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    
+    <div class="video-container">
+        <h2>Columbus-86th (Web-Compatible Short - 1min)</h2>
+        <div id="status3" class="status">Loading...</div>
+        <video id="video3" controls preload="metadata">
+            <source src="http://localhost:8001/processed/Columbus-86th_web_compatible_short.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    
+    <script>
+        function setupVideo(videoId, statusId) {
+            const video = document.getElementById(videoId);
+            const status = document.getElementById(statusId);
+            
+            video.addEventListener('loadedmetadata', () => {
+                status.innerHTML = '<span class="success">✓ Video loaded successfully</span>';
+                status.innerHTML += `<br>Duration: ${Math.round(video.duration)}s`;
+                status.innerHTML += `<br>Dimensions: ${video.videoWidth}x${video.videoHeight}`;
+            });
+            
+            video.addEventListener('error', (e) => {
+                status.innerHTML = '<span class="error">✗ Failed to load video</span>';
+                status.innerHTML += `<br>Error: ${e.message || 'Unknown error'}`;
+            });
+            
+            video.addEventListener('canplay', () => {
+                console.log(`Video ${videoId} can play`);
+            });
+        }
+        
+        setupVideo('video1', 'status1');
+        setupVideo('video2', 'status2');
+        setupVideo('video3', 'status3');
+    </script>
+</body>
+</html>
