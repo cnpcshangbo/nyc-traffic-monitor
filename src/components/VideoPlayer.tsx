@@ -141,7 +141,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoPath, onTimeUpdate, onDe
     
     // Schedule next detection
     animationRef.current = requestAnimationFrame(performDetection);
-  }, [isModelLoaded, isDetecting, detectionService, drawBoundingBoxes, onDetections, detectionInterval]);
+  }, [isModelLoaded, isDetecting, detectionService, drawBoundingBoxes, onDetections, detectionInterval, confidenceThreshold]);
   
   useEffect(() => {
     if (isDetecting) {
@@ -163,7 +163,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoPath, onTimeUpdate, onDe
         if (internalPlayer && internalPlayer.tagName === 'VIDEO') {
           videoRef.current = internalPlayer;
         }
-      } catch (error) {
+      } catch {
         // Ignore errors when trying to get internal player
       }
     }
@@ -195,7 +195,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoPath, onTimeUpdate, onDe
     setIsDetecting(false);
   };
   
-  const handleError = (error: any) => {
+  const handleError = (error: Error) => {
     console.error('Video error:', error);
     setVideoError('Failed to load video. Please check the video file exists.');
     setIsDetecting(false);

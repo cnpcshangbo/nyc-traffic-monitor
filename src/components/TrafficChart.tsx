@@ -79,7 +79,7 @@ const TrafficChart: React.FC<TrafficChartProps> = ({
         clearInterval(interval);
       }
     };
-  }, [currentTime, detectionService, locationId]);
+  }, [currentTime, detectionService, locationId, updateInterval]);
 
   // Update current counts when new detections arrive
   useEffect(() => {

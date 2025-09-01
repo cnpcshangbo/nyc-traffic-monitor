@@ -91,7 +91,7 @@ const ProcessingProgress: React.FC<ProcessingProgressProps> = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPolling, jobs]);
+  }, [isPolling, jobs, fetchProcessingProgress]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);

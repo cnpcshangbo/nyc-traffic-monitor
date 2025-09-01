@@ -1,22 +1,25 @@
 // API configuration for different environments
 export const getApiBaseUrl = (): string => {
-  // Check if we're running on the external domains
-  if (window.location.hostname === 'classification.boshang.online') {
+  // 1) Explicit override via Vite env
+  const envUrl = import.meta.env?.VITE_API_URL as string | undefined;
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim().length > 0) {
+    return envUrl.replace(/\/$/, '');
+  }
+
+  // 2) Hostname-based defaults for deployed environments
+  const host = typeof window !== 'undefined' ? window.location.hostname : '';
+  // Same-origin when frontend is served from the backend domain
+  if (host === 'classificationbackend.boshang.online') {
+    return window.location.origin;
+  }
+  if (host === 'classification.boshang.online' ||
+      host === 'asdfghjklzxcvbnm.aimobilitylab.xyz' ||
+      host === 'cnpcshangbo.github.io' ||
+      host === 'ai-mobility-research-lab.github.io') {
     return 'https://classificationbackend.boshang.online';
   }
-  
-  if (window.location.hostname === 'asdfghjklzxcvbnm.aimobilitylab.xyz') {
-    // Use the dedicated backend subdomain with HTTPS
-    return 'https://classificationbackend.boshang.online';
-  }
-  
-  // GitHub Pages domains
-  if (window.location.hostname === 'cnpcshangbo.github.io' || 
-      window.location.hostname === 'ai-mobility-research-lab.github.io') {
-    return 'https://classificationbackend.boshang.online';
-  }
-  
-  // Default to localhost for local development
+
+  // 3) Fallback to localhost for local development
   return 'http://localhost:8001';
 };
 
@@ -26,5 +29,6 @@ export const API_ENDPOINTS = {
   processingStatus: (locationId: string) => `${API_BASE_URL}/processing-status/${encodeURIComponent(locationId)}`,
   processVideo: `${API_BASE_URL}/process-video`,
   processedVideo: (path: string) => `${API_BASE_URL}${path}`,
-  health: `${API_BASE_URL}/health`
+  health: `${API_BASE_URL}/health`,
+  locations: `${API_BASE_URL}/locations`,
 };

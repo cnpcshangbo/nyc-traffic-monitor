@@ -9,7 +9,7 @@ import VideoUploader from './components/VideoUploader';
 import ProcessingProgress from './components/ProcessingProgress';
 import { Detection, ObjectDetectionService } from './services/objectDetection';
 import { ClassificationSchema, predefinedSchemas } from './config/schemas';
-import { getApiBaseUrl } from './config/api';
+import { API_ENDPOINTS, getApiBaseUrl } from './config/api';
 import labLogo from './assets/lab_logo.png';
 import './App.css';
 
@@ -43,10 +43,10 @@ function App() {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const response = await fetch(`${getApiBaseUrl()}/locations`);
+        const response = await fetch(API_ENDPOINTS.locations);
         if (response.ok) {
           const data = await response.json();
-          const backendLocations: Location[] = data.locations.map((loc: any) => ({
+          const backendLocations: Location[] = data.locations.map((loc: { id: string; name: string; original_video_url?: string }) => ({
             id: loc.id,
             name: loc.name,
             coordinates: defaultCoordinates[loc.id] || [40.7831, -73.9778], // Default NYC coordinates
