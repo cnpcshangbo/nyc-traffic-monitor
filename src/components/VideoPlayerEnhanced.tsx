@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { ObjectDetectionService, Detection } from '../services/objectDetection';
 import { API_ENDPOINTS } from '../config/api';
+import { getProcessedVideoOverride } from '../config/processedVideos';
 
 interface VideoPlayerEnhancedProps {
   videoPath: string;
@@ -42,6 +43,16 @@ const VideoPlayerEnhanced: React.FC<VideoPlayerEnhancedProps> = ({
     console.log(`🔍 Checking for processed video for location: ${locationId}`);
     
     try {
+      // 1) Prefer explicit override when configured (best practice: deterministic demos)
+      const override = getProcessedVideoOverride(locationId);
+      if (override) {
+        console.log(`✅ Using override processed video for ${locationId}: ${override}`);
+        setProcessedVideoUrl(override);
+        setUseProcessedVideo(true);
+        return;
+      }
+
+      // 2) Otherwise query backend status API
       const apiUrl = API_ENDPOINTS.processingStatus(locationId);
       console.log(`🌐 API URL: ${apiUrl}`);
       
