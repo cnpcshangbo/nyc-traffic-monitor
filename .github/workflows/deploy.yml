@@ -39,6 +39,9 @@ jobs:
       - name: Build for production
         run: npm run build
 
+      - name: Add SPA 404 fallback
+        run: cp ./dist/index.html ./dist/404.html
+
       - name: Add .nojekyll file
         run: touch ./dist/.nojekyll
 
