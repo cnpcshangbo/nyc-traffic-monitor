@@ -5,6 +5,9 @@ Defines detection zones for traffic counting
 """
 
 from typing import Dict, List, Tuple
+import json
+import os
+from pathlib import Path
 
 # Virtual loop configurations for each location
 # Each loop is defined by polygon points and counting direction
@@ -122,7 +125,27 @@ def get_loop_config(location_id: str) -> List[Dict]:
     Returns:
         List of loop configuration dictionaries
     """
-    return LOOP_CONFIGURATIONS.get(location_id, [])
+    base = LOOP_CONFIGURATIONS.get(location_id, [])
+    # Load optional overrides from JSON file placed next to this module
+    try:
+        overrides_path = Path(__file__).with_name('loop_overrides.json')
+        if overrides_path.exists():
+            with open(overrides_path, 'r') as f:
+                overrides = json.load(f)
+            # Expected format: { "<locationId>": [ { name, zone_points, direction, description? }, ... ] }
+            loc_overrides = overrides.get(location_id)
+            if isinstance(loc_overrides, list) and len(loc_overrides) > 0:
+                # If an override provides a loop with the same name, replace it; otherwise append
+                by_name = {cfg["name"]: cfg for cfg in base if isinstance(cfg, dict) and "name" in cfg}
+                for loop in loc_overrides:
+                    if not isinstance(loop, dict) or "name" not in loop:
+                        continue
+                    by_name[loop["name"]] = loop
+                return list(by_name.values())
+    except Exception:
+        # Silently ignore malformed overrides; fall back to base
+        pass
+    return base
 
 def get_all_locations() -> List[str]:
     """Get list of all configured location IDs"""

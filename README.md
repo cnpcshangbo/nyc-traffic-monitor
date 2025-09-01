@@ -101,6 +101,29 @@ python process_videos.py
 - OpenCV for video processing
 - Docker for containerization
 
+### Loop Tuning Tool
+Use the interactive tuner to adjust virtual loop polygons on a representative frame, then generate a short processed preview to validate placement.
+
+1) Backend setup
+```
+cd backend
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+```
+
+2) Run the tuner (example: Amsterdam-80th)
+```
+python tools/loop_tuner.py \
+  --location Amsterdam-80th \
+  --input videos/Amsterdam-80th_2025-02-13_06-00-04.mp4 \
+  --timestamp 5 \
+  --duration 30
+```
+
+Controls: Click to add points; n=new polygon; u=undo; x=delete; c/Enter=close; s=save; q=quit.
+
+The tool writes overrides to `backend/loop_overrides.json` (kept separate from code) and merges them at runtime via `backend/loop_configs.py`. It also produces a preview MP4 and JSON in `backend/processed_videos/` for rapid iteration.
+
 ### Data Flow
 ```
 User Selection → Video Player → Detection Engine → Analytics → Export

@@ -243,7 +243,8 @@ class VideoProcessorWithLoops:
         return frame
         
     def process_video_with_loops(self, input_path: str, output_video_path: str, 
-                                output_json_path: str, conf_threshold: float = 0.6) -> bool:
+                                output_json_path: str, conf_threshold: float = 0.6,
+                                max_duration_seconds: float | None = None) -> bool:
         """
         Process video with virtual inductive loops and export results
         
@@ -315,6 +316,14 @@ class VideoProcessorWithLoops:
                     # Draw detections and loops on frame
                     frame = self.draw_detections_and_loops(frame, detections)
                     
+                    # Early exit if we reached the preview duration
+                    if max_duration_seconds is not None and timestamp >= max_duration_seconds:
+                        logger.info(f"Reached preview duration: {max_duration_seconds}s; stopping early")
+                        # Draw overlays on the last frame for a consistent end frame
+                        frame = self.draw_detections_and_loops(frame, detections)
+                        out.write(frame)
+                        break
+
                     # Write frame
                     out.write(frame)
                     frame_number += 1
