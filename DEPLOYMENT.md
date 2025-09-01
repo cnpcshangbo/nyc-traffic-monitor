@@ -1,54 +1,50 @@
 # Deployment Guide
 
-## GitHub Pages Deployment
+## GitHub Pages Deployment (Actions-only)
 
-### For Original Repository (cnpcshangbo/nyc-traffic-monitor)
-The repository is configured to automatically deploy to GitHub Pages at:
-https://cnpcshangbo.github.io/nyc-traffic-monitor/
+This repository deploys via GitHub Actions to GitHub Pages. Use a single deployment path (Actions) to avoid conflicts.
 
-### For Forked Repositories
+### Configure Pages
 
-If you've forked this repository, follow these steps to deploy to your GitHub Pages:
+1. Go to Settings → Pages
+2. Build and deployment → Source: GitHub Actions
 
-1. **Update the base path in `vite.config.ts`:**
-   ```typescript
-   // Change this line to match your repository name
-   const base = process.env.VITE_BASE_PATH || '/UMDL2/';
-   ```
-   Replace `/UMDL2/` with your repository name (e.g., `/your-repo-name/`)
+### Build Base Path
 
-2. **Enable GitHub Pages in your repository:**
-   - Go to Settings → Pages
-   - Source: Deploy from a branch
-   - Branch: Select `gh-pages` (will be created automatically)
-   - Click Save
+The site is hosted under a subpath (e.g., `/UMDL2/`). The build uses `VITE_BASE_PATH` to set the correct base:
 
-3. **Trigger the deployment:**
-   - Push any commit to the main branch, OR
-   - Go to Actions → Deploy to GitHub Pages → Run workflow
-
-4. **Access your deployed site:**
-   Your site will be available at:
-   `https://[your-username].github.io/[your-repo-name]/`
-
-### Important Notes
-
-- The `.nojekyll` file is required to prevent Jekyll processing
-- Videos are served from the backend at https://classificationbackend.boshang.online
-- Make sure your repository name in `vite.config.ts` matches your actual GitHub repository name
-- The GitHub Actions workflow runs on pushes to `main`, `master`, or `feature/transportation-yolov8-model` branches
-
-### Environment Variables (Optional)
-
-You can also set the base path using an environment variable during build:
 ```bash
-VITE_BASE_PATH=/your-repo-name/ npm run build
+VITE_BASE_PATH=/UMDL2/ npm run build
 ```
+
+`vite.config.ts` reads this env var and sets `base` accordingly.
+
+### Deployment Workflow
+
+Deployment is automated by `.github/workflows/deploy.yml`:
+- Installs deps and runs tests
+- Sets `VITE_BASE_PATH` to `/${GITHUB_REPOSITORY#*/}/` (e.g., `/UMDL2/`)
+- Builds the frontend
+- Adds `.nojekyll` and SPA `404.html`
+- Publishes via `actions/deploy-pages`
+
+To trigger a deployment:
+- Push to `main` (or run the workflow manually from the Actions tab)
+
+### Access your site
+
+`https://[org-or-user].github.io/[repo-name]/` (e.g., `https://ai-mobility-research-lab.github.io/UMDL2/`)
+
+### Notes
+
+- Videos are served by `https://classificationbackend.boshang.online`
+- Ensure the repo name matches the base path you expect (the workflow handles this automatically)
+- Avoid pushing built artifacts to `gh-pages` manually; use the Actions workflow only
 
 ### Troubleshooting
 
-If you encounter build errors:
-1. Make sure all dependencies are installed: `npm ci`
-2. Check that the base path matches your repository name
-3. Ensure GitHub Pages is enabled in your repository settings
-4. Check the Actions tab for any workflow errors
+If you encounter issues:
+1. Verify Pages source is set to GitHub Actions
+2. Check Actions logs for build/deploy errors
+3. Confirm `VITE_BASE_PATH` matches the repository path
+4. Hard refresh the site (clear cache) after deployments
