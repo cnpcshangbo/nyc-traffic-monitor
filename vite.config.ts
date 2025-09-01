@@ -11,7 +11,7 @@ function cspPlugin(command: 'serve' | 'build') {
   const isDev = command === 'serve'
   const content = isDev
     ? "script-src 'self' 'unsafe-eval' 'unsafe-inline' https: data: blob:; style-src 'self' 'unsafe-inline' https: data:; img-src 'self' data: https: blob:; connect-src 'self' https: http: wss: ws:; media-src 'self' https: http: data: blob:; default-src 'self' https:;"
-    : "script-src 'self' 'unsafe-inline' https: data:; style-src 'self' 'unsafe-inline' https: data:; img-src 'self' data: https:; connect-src 'self' https: wss:; media-src 'self' https: data: blob:; default-src 'self' https:;"
+    : "script-src 'self' 'unsafe-inline' https: data:; style-src 'self' 'unsafe-inline' https: data:; img-src 'self' data: https:; connect-src 'self' https: http: wss: ws:; media-src 'self' https: http: data: blob:; default-src 'self' https:;"
 
   return {
     name: 'html-csp-inject',

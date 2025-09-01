@@ -2,8 +2,15 @@
 export const getApiBaseUrl = (): string => {
   // 1) Explicit override via Vite env
   const envUrl = import.meta.env?.VITE_API_URL as string | undefined;
+  const isSecurePage = typeof window !== 'undefined' && window.location.protocol === 'https:';
   if (envUrl && typeof envUrl === 'string' && envUrl.trim().length > 0) {
-    return envUrl.replace(/\/$/, '');
+    const cleaned = envUrl.replace(/\/$/, '');
+    // Avoid mixed-content: ignore http:// API when page is served over https
+    if (isSecurePage && cleaned.startsWith('http://')) {
+      // fall through to hostname-based defaults below
+    } else {
+      return cleaned;
+    }
   }
 
   // 2) Hostname-based defaults for deployed environments
